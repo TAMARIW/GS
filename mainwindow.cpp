@@ -45,6 +45,9 @@ void em_init_plot(QCustomPlot *p)
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , udp_socket(new QUdpSocket(this))
+    , udp_server_ip("192.168.0.101")
+    , udp_server_port(8080)
 {
     ui->setupUi(this);
 
@@ -59,7 +62,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_udp_ip->setText("192.168.0.100");
     ui->textEdit_udp_port->setText("8080");
 
+    qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
+
+    udp_socket->bind(QHostAddress::AnyIPv4, 8081);
+    qDebug() << "Bound to:" << udp_socket->localAddress().toString() << udp_socket->localPort();
+    connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
 }
 
 MainWindow::~MainWindow()
@@ -68,8 +76,33 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::sendMessage()
+{
+    // QString message = ui->lineEdit_input->text();
+    // QByteArray data = message.toUtf8();
+    // udp_socket->writeDatagram(data, serverAddress, serverPort);
+}
+
+void MainWindow::receiveMessage()
+{
+    while (udp_socket->hasPendingDatagrams())
+    {
+        QByteArray buffer;
+        buffer.resize(int(udp_socket->pendingDatagramSize()));
+        QHostAddress sender;
+        quint16 senderPort;
+        udp_socket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
+
+        qDebug() << "Received from" << sender.toString() << ":" << senderPort << "->"
+                 << QString::fromUtf8(buffer);
+    }
+}
+
 void MainWindow::on_pushButton_em0_toggled(bool checked)
 {
+    QByteArray data = "Hello from Qt";
+    udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+
     if (checked)
     {
        ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));

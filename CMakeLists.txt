@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(dock-gs LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets PrintSupport)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets PrintSupport Network)
 
 qt_standard_project_setup()
 
@@ -28,6 +28,7 @@ target_link_libraries(dock-gs
         Qt::Core
         Qt::Widgets
         Qt6::PrintSupport
+        Qt6::Network
 )
 
 include(GNUInstallDirs)

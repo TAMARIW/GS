@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QUdpSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,7 +29,15 @@ private slots:
 
     void on_pushButton_em_enable_toggled(bool checked);
 
+    void sendMessage();
+
+    void receiveMessage();
+
+
 private:
     Ui::MainWindow *ui;
+    QUdpSocket *udp_socket;
+    QHostAddress udp_server_ip;
+    quint16 udp_server_port;
 };
 #endif // MAINWINDOW_H
