@@ -46,8 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , udp_socket(new QUdpSocket(this))
-    , udp_server_ip("192.168.0.101")
-    , udp_server_port(8080)
 {
     ui->setupUi(this);
 
@@ -65,9 +63,9 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
 
-    udp_socket->bind(QHostAddress::AnyIPv4, 8081);
-    qDebug() << "Bound to:" << udp_socket->localAddress().toString() << udp_socket->localPort();
-    connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
+    //udp_socket->bind(QHostAddress::AnyIPv4, 8081);
+    //qDebug() << "Bound to:" << udp_socket->localAddress().toString() << udp_socket->localPort();
+    //connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
 }
 
 MainWindow::~MainWindow()
@@ -163,4 +161,62 @@ void MainWindow::on_pushButton_em_enable_toggled(bool checked)
         ui->pushButton_em_enable->setIcon(QIcon(":/assets/em_off.png"));
     }
 }
+
+void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
+{
+    QString ip_str = ui->textEdit_udp_ip->toPlainText();
+    QString port_str = ui->textEdit_udp_port->toPlainText();
+
+    // Check if IP is valid and matches the expected server IP (192.168.0.101)
+    if (ip_str != "192.168.0.101") {
+        qDebug() << "Invalid server IP. Connection will not be made.";
+        QPixmap pix(":/assets/wifi_off.png");
+        ui->label->setPixmap(pix);
+        ui->pushButton_udp_connect->setChecked(false); // Reset the button
+        return; // Exit the function early if the IP is wrong
+    }
+
+    // Proceed with connection if IP matches the expected server IP
+    if (ip_str.isEmpty() || port_str.isEmpty()) {
+        qDebug() << "Please enter a valid IP and port.";
+        return;
+    }
+
+    QHostAddress serverIp(ip_str);
+    quint16 serverPort = port_str.toUInt();
+
+    if (!serverIp.isNull() && serverPort != 0) {
+        udp_server_ip = serverIp;
+        udp_server_port = serverPort;
+        qDebug() << "Configured server:" << udp_server_ip.toString() << udp_server_port;
+
+        if (checked) {
+            // Start the UDP connection and begin receiving
+            if (udp_socket->bind(QHostAddress::AnyIPv4, 8081)) {
+                connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
+                qDebug() << "UDP Enabled. Receiving from:" << udp_socket->localAddress().toString() << udp_socket->localPort();
+                QPixmap pix(":/assets/wifi_on.png");
+                ui->label->setPixmap(pix);
+            } else {
+                qDebug() << "Failed to bind UDP socket.";
+                QPixmap pix(":/assets/wifi_off.png");
+                ui->label->setPixmap(pix);
+                ui->pushButton_udp_connect->setChecked(false);
+            }
+        } else {
+            // Disable UDP connection when the button is toggled off
+            disconnect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
+            udp_socket->close(); // unbinds socket
+            qDebug() << "UDP Disabled.";
+            QPixmap pix(":/assets/wifi_off.png");
+            ui->label->setPixmap(pix);
+        }
+    } else {
+        qDebug() << "Invalid IP or port.";
+        QPixmap pix(":/assets/wifi_off.png");
+        ui->label->setPixmap(pix);
+        ui->pushButton_udp_connect->setChecked(false);
+    }
+}
+
 

@@ -142,7 +142,7 @@
         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton_em_gain_2">
+      <widget class="QPushButton" name="pushButton_udp_connect">
        <property name="geometry">
         <rect>
          <x>350</x>
@@ -180,6 +180,9 @@ QPushButton:hover {
          <width>50</width>
          <height>50</height>
         </size>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </widget>

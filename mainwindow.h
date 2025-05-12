@@ -34,6 +34,8 @@ private slots:
     void receiveMessage();
 
 
+    void on_pushButton_udp_connect_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
     QUdpSocket *udp_socket;
