@@ -2,18 +2,112 @@
 #include "ui_mainwindow.h"
 #include "qcustomplot.h"
 
+uint16_t crc16_ccitt(const QByteArray &data)
+{
+    uint16_t crc = 0xFFFF;
+    for (char byte : data) {
+        crc ^= static_cast<uint8_t>(byte) << 8;
+        for (int i = 0; i < 8; ++i) {
+            if (crc & 0x8000)
+                crc = (crc << 1) ^ 0x1021;
+            else
+                crc <<= 1;
+        }
+    }
+    return crc;
+}
+
+bool parse_telemetry(const QString &rx, telemetry_t &t)
+{
+    if (!rx.startsWith('$') || !rx.endsWith('#')){
+        qDebug() << "Invalid frame format";
+        return false;
+    }
+
+    QString payload = rx.mid(1, rx.length() - 1);
+    const QStringList components = payload.split(',');
+
+    // Iterate over each comma separated components
+    for (const QString &component : components)
+    {
+        // Split by colon to separate type and values
+        QStringList parts = component.split(':');
+        if (parts.size() != 2)
+        {
+            qDebug() << "Invalid component:" << component;
+            return false;
+        }
+
+        QString type = parts[0];
+        QStringList values = parts[1].split('x');
+
+        if (type == "d") // Distance
+        {
+            for (int i = 0; i < 4; ++i)
+            {
+                t.d[i] = values[i].toFloat();
+            }
+        }
+        else if (type == "c") // current
+        {
+            for (int i = 0; i < 4; ++i) {
+                t.c[i] = values[i].toFloat();
+            }
+        }
+        else if (type == "r") // CRC
+        {
+            t.crc = values[0].toUInt();
+        }
+        else
+        {
+            qDebug() << "Unknown data type:" << type;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static double count = 0;
+
+void MainWindow::populate_telemetry(const telemetry_t &t)
+{
+    d[0].append(t.d[0]);
+    d[1].append(t.d[1]);
+    d[2].append(t.d[2]);
+    d[3].append(t.d[3]);
+    tms.append(count);
+
+    count += 0.055;
+
+    if (tms.size() > 250)
+    {
+        tms.removeFirst();
+        d[0].removeFirst();
+        d[1].removeFirst();
+        d[2].removeFirst();
+        d[3].removeFirst();
+    }
+
+    ui->widget_em_plot->graph(0)->setData(tms, d[0]);
+    ui->widget_em_plot->graph(1)->setData(tms, d[1]);
+    ui->widget_em_plot->graph(2)->setData(tms, d[2]);
+    ui->widget_em_plot->graph(3)->setData(tms, d[3]);
+}
+
 void em_init_plot(QCustomPlot *p)
 {
     QPen pen_x(QColor(0, 114, 189));
     QPen pen_y(QColor(217, 83, 25));
     QPen pen_z(QColor(237, 177, 32));
     QPen pen_w(QColor(126, 47, 142));
+
     pen_x.setWidth(2);
     pen_y.setWidth(2);
     pen_z.setWidth(2);
     pen_w.setWidth(2);
 
-    p->xAxis->setLabel("Time [s]");
+    p->xAxis->setLabel("t [s]");
     p->yAxis->setLabel("Current [mA]");
     p->xAxis->setLabelFont(QFont("Courier New", 12));
     p->yAxis->setLabelFont(QFont("Courier New", 12));
@@ -63,9 +157,20 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
 
-    //udp_socket->bind(QHostAddress::AnyIPv4, 8081);
-    //qDebug() << "Bound to:" << udp_socket->localAddress().toString() << udp_socket->localPort();
-    //connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
+    timer_plot_mag = new QTimer(this);
+
+    connect(timer_plot_mag, &QTimer::timeout, this, [this]()
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            ui->widget_em_plot->graph(i)->setData(tms, d[i]);
+        }
+
+        ui->widget_em_plot->rescaleAxes();
+        ui->widget_em_plot->replot();
+    });
+
+    timer_plot_mag->start(200);
 }
 
 MainWindow::~MainWindow()
@@ -87,20 +192,23 @@ void MainWindow::receiveMessage()
     {
         QByteArray buffer;
         buffer.resize(int(udp_socket->pendingDatagramSize()));
-        QHostAddress sender;
-        quint16 senderPort;
-        udp_socket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
 
-        qDebug() << "Received from" << sender.toString() << ":" << senderPort << "->"
-                 << QString::fromUtf8(buffer);
+        QHostAddress tpi_ip;
+        quint16 tpi_port;
+        udp_socket->readDatagram(buffer.data(), buffer.size(), &tpi_ip, &tpi_port);
+
+        qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
+        telemetry_t t;
+
+        if(parse_telemetry(QString::fromUtf8(buffer), t))
+        {
+            populate_telemetry(t);
+        }
     }
 }
 
 void MainWindow::on_pushButton_em0_toggled(bool checked)
 {
-    QByteArray data = "Hello from Qt";
-    udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
-
     if (checked)
     {
        ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));
@@ -166,17 +274,16 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
 {
     QString ip_str = ui->textEdit_udp_ip->toPlainText();
     QString port_str = ui->textEdit_udp_port->toPlainText();
-
-    // Check if IP is valid and matches the expected server IP (192.168.0.101)
-    if (ip_str != "192.168.0.101") {
+/*
+    if (ip_str != "192.168.0.100") {
         qDebug() << "Invalid server IP. Connection will not be made.";
         QPixmap pix(":/assets/wifi_off.png");
         ui->label->setPixmap(pix);
         ui->pushButton_udp_connect->setChecked(false); // Reset the button
         return; // Exit the function early if the IP is wrong
     }
+*/
 
-    // Proceed with connection if IP matches the expected server IP
     if (ip_str.isEmpty() || port_str.isEmpty()) {
         qDebug() << "Please enter a valid IP and port.";
         return;
@@ -195,6 +302,10 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
             if (udp_socket->bind(QHostAddress::AnyIPv4, 8081)) {
                 connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
                 qDebug() << "UDP Enabled. Receiving from:" << udp_socket->localAddress().toString() << udp_socket->localPort();
+
+                QByteArray data = "Hello from Qt";
+                udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+
                 QPixmap pix(":/assets/wifi_on.png");
                 ui->label->setPixmap(pix);
             } else {
@@ -204,6 +315,9 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
                 ui->pushButton_udp_connect->setChecked(false);
             }
         } else {
+            QByteArray data = "Bye from Qt";
+            udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+
             // Disable UDP connection when the button is toggled off
             disconnect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
             udp_socket->close(); // unbinds socket
