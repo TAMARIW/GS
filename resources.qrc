@@ -1,12 +1,12 @@
 <RCC>
     <qresource prefix="/">
-        <file>assets/em_off.png</file>
-        <file>assets/em_on.png</file>
         <file>assets/toggle_off.png</file>
         <file>assets/toggle_on.png</file>
         <file>assets/send.png</file>
         <file>assets/router.png</file>
         <file>assets/wifi_off.png</file>
         <file>assets/wifi_on.png</file>
+        <file>assets/em_on.png</file>
+        <file>assets/em_off.png</file>
     </qresource>
 </RCC>

@@ -2,6 +2,9 @@
 #include "ui_mainwindow.h"
 #include "qcustomplot.h"
 
+#define PID_CURRENT_KP 0.065
+#define PID_CURRENT_KI 0.3
+
 uint16_t crc16_ccitt(const QByteArray &data)
 {
     uint16_t crc = 0xFFFF;
@@ -187,8 +190,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em1->setText(QString::number(1000));
     ui->textEdit_em2->setText(QString::number(1000));
     ui->textEdit_em3->setText(QString::number(1000));
-    ui->textEdit_em_kp->setText(QString::number(0.065));
-    ui->textEdit_em_ki->setText(QString::number(0.3));
+    ui->textEdit_em_kp->setText(QString::number(PID_CURRENT_KP));
+    ui->textEdit_em_ki->setText(QString::number(PID_CURRENT_KI));
     ui->textEdit_em_fc->setText(QString::number(0.0));
     ui->textEdit_em_fs->setText(QString::number(0.0));
     ui->textEdit_udp_ip->setText("192.168.0.100");
@@ -282,15 +285,21 @@ void MainWindow::on_pushButton_em0_toggled(bool checked)
 {
     if (checked)
     {
-       sendMessage(TCMD_EM0, ui->textEdit_em0->toPlainText().toDouble());
+        sendMessage(TCMD_EM0, ui->textEdit_em0->toPlainText().toDouble());
         qDebug() << ui->textEdit_em0->toPlainText().toDouble();
 
-       ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));
+        ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));
+
+        QPixmap pix(":/assets/em_on.png");
+        ui->label_em0->setPixmap(pix);
     }
     else
     {
         sendMessage(TCMD_EM0_STOP, 0.0);
         ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_off.png"));
+
+        QPixmap pix(":/assets/em_off.png");
+        ui->label_em0->setPixmap(pix);
     }
 }
 
@@ -301,11 +310,17 @@ void MainWindow::on_pushButton_em1_toggled(bool checked)
     {
         sendMessage(TCMD_EM1, ui->textEdit_em1->toPlainText().toDouble());
         ui->pushButton_em1->setIcon(QIcon(":/assets/toggle_on.png"));
+
+        QPixmap pix(":/assets/em_on.png");
+        ui->label_em1->setPixmap(pix);
     }
     else
     {
         sendMessage(TCMD_EM1_STOP, 0.0);
         ui->pushButton_em1->setIcon(QIcon(":/assets/toggle_off.png"));
+
+        QPixmap pix(":/assets/em_off.png");
+        ui->label_em1->setPixmap(pix);
     }
 }
 
@@ -316,11 +331,17 @@ void MainWindow::on_pushButton_em2_toggled(bool checked)
     {
         sendMessage(TCMD_EM2, ui->textEdit_em2->toPlainText().toDouble());
         ui->pushButton_em2->setIcon(QIcon(":/assets/toggle_on.png"));
+
+        QPixmap pix(":/assets/em_on.png");
+        ui->label_em2->setPixmap(pix);
     }
     else
     {
         sendMessage(TCMD_EM2_STOP, 0.0);
         ui->pushButton_em2->setIcon(QIcon(":/assets/toggle_off.png"));
+
+        QPixmap pix(":/assets/em_off.png");
+        ui->label_em2->setPixmap(pix);
     }
 }
 
@@ -331,25 +352,17 @@ void MainWindow::on_pushButton_em3_toggled(bool checked)
     {
         sendMessage(TCMD_EM3, ui->textEdit_em3->toPlainText().toDouble());
         ui->pushButton_em3->setIcon(QIcon(":/assets/toggle_on.png"));
+
+        QPixmap pix(":/assets/em_on.png");
+        ui->label_em3->setPixmap(pix);
     }
     else
     {
         sendMessage(TCMD_EM3_STOP, 0.0);
         ui->pushButton_em3->setIcon(QIcon(":/assets/toggle_off.png"));
-    }
-}
 
-void MainWindow::on_pushButton_em_enable_toggled(bool checked)
-{
-    if (checked)
-    {
-        sendMessage(TCMD_EM_ENABLE, 0.0);
-        ui->pushButton_em_enable->setIcon(QIcon(":/assets/em_on.png"));
-    }
-    else
-    {
-        sendMessage(TCMD_EM_STOP_ALL, 0.0);
-        ui->pushButton_em_enable->setIcon(QIcon(":/assets/em_off.png"));
+        QPixmap pix(":/assets/em_off.png");
+        ui->label_em3->setPixmap(pix);
     }
 }
 
@@ -416,4 +429,11 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
     }
 }
 
+
+
+void MainWindow::on_pushButton_em_gain_clicked()
+{
+    sendMessage(TCMD_EM_KP, ui->textEdit_em_kp->toPlainText().toDouble());
+    sendMessage(TCMD_EM_KI, ui->textEdit_em_ki->toPlainText().toDouble());
+}
 

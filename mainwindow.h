@@ -53,8 +53,6 @@ private slots:
 
     void on_pushButton_em2_toggled(bool checked);
 
-    void on_pushButton_em_enable_toggled(bool checked);
-
     void sendMessage(tcmd_idx_t idx, double data);
 
     void receiveMessage();
@@ -66,6 +64,8 @@ private slots:
     void processMessageQueue();
 
     void on_pushButton_em3_toggled(bool checked);
+
+    void on_pushButton_em_gain_clicked();
 
 private:
     void populate_telemetry(const telemetry_t &t);
