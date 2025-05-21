@@ -34,7 +34,7 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
         QStringList parts = component.split(':');
         if (parts.size() != 2)
         {
-            qDebug() << "Invalid component:" << component;
+            //qDebug() << "Invalid component:" << component;
             return false;
         }
 
@@ -72,27 +72,26 @@ static double count = 0;
 
 void MainWindow::populate_telemetry(const telemetry_t &t)
 {
-    d[0].append(t.d[0]);
-    d[1].append(t.d[1]);
-    d[2].append(t.d[2]);
-    d[3].append(t.d[3]);
     tms.append(count);
-
     count += 0.055;
+
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        d[i].append(t.d[i]);
+        c[i].append(t.c[i]);
+    }
+
 
     if (tms.size() > 250)
     {
         tms.removeFirst();
-        d[0].removeFirst();
-        d[1].removeFirst();
-        d[2].removeFirst();
-        d[3].removeFirst();
-    }
 
-    ui->widget_em_plot->graph(0)->setData(tms, d[0]);
-    ui->widget_em_plot->graph(1)->setData(tms, d[1]);
-    ui->widget_em_plot->graph(2)->setData(tms, d[2]);
-    ui->widget_em_plot->graph(3)->setData(tms, d[3]);
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            d[i].removeFirst();
+            c[i].removeFirst();
+        }
+    }
 }
 
 void em_init_plot(QCustomPlot *p)
@@ -136,6 +135,47 @@ void em_init_plot(QCustomPlot *p)
     p->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 }
 
+void tof_init_plot(QCustomPlot *p)
+{
+    QPen pen_x(QColor(0, 114, 189));
+    QPen pen_y(QColor(217, 83, 25));
+    QPen pen_z(QColor(237, 177, 32));
+    QPen pen_w(QColor(126, 47, 142));
+
+    pen_x.setWidth(2);
+    pen_y.setWidth(2);
+    pen_z.setWidth(2);
+    pen_w.setWidth(2);
+
+    p->xAxis->setLabel("t [s]");
+    p->yAxis->setLabel("Current [mA]");
+    p->xAxis->setLabelFont(QFont("Courier New", 12));
+    p->yAxis->setLabelFont(QFont("Courier New", 12));
+    p->xAxis->setLabelColor(Qt::blue);
+    p->yAxis->setLabelColor(Qt::blue);
+    p->addGraph();
+    p->addGraph();
+    p->addGraph();
+    p->addGraph();
+    p->graph(0)->setName("TOF-0");
+    p->graph(1)->setName("TOF-1");
+    p->graph(2)->setName("TOF-2");
+    p->graph(3)->setName("TOF-3");
+    p->legend->setVisible(true);
+    p->graph(0)->setPen(pen_x);
+    p->graph(1)->setPen(pen_y);
+    p->graph(2)->setPen(pen_z);
+    p->graph(3)->setPen(pen_w);
+    p->replot();
+
+    p->legend->setBrush(Qt::NoBrush);
+    p->setBackground(Qt::transparent);
+    p->axisRect()->setBackground(Qt::transparent);
+    p->setAttribute(Qt::WA_TranslucentBackground);
+    p->setStyleSheet("background: transparent;");
+    p->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -156,6 +196,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
+    tof_init_plot(ui->widget_tof_plot);
 
     timer_plot_mag = new QTimer(this);
 
@@ -163,14 +204,21 @@ MainWindow::MainWindow(QWidget *parent)
     {
         for (int i = 0; i < 4; ++i)
         {
-            ui->widget_em_plot->graph(i)->setData(tms, d[i]);
+            ui->widget_em_plot->graph(i)->setData(tms, c[i]);
+            ui->widget_tof_plot->graph(i)->setData(tms, d[i]);
         }
 
         ui->widget_em_plot->rescaleAxes();
         ui->widget_em_plot->replot();
+
+        ui->widget_tof_plot->rescaleAxes();
+        ui->widget_tof_plot->replot();
     });
 
-    timer_plot_mag->start(200);
+    timer_plot_mag->start(70);
+
+    connect(udp_socket, &QUdpSocket::bytesWritten,
+            this, &MainWindow::handleBytesWritten);
 }
 
 MainWindow::~MainWindow()
@@ -178,12 +226,35 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
-void MainWindow::sendMessage()
+void MainWindow::handleBytesWritten(qint64 bytes)
 {
-    // QString message = ui->lineEdit_input->text();
-    // QByteArray data = message.toUtf8();
-    // udp_socket->writeDatagram(data, serverAddress, serverPort);
+    Q_UNUSED(bytes);
+    isSending = false;
+
+    // Add small delay if needed (10ms)
+    QTimer::singleShot(10, this, &MainWindow::processMessageQueue);
+}
+
+void MainWindow::processMessageQueue()
+{
+    if (!messageQueue.isEmpty() && !isSending) {
+        isSending = true;
+        auto message = messageQueue.dequeue();
+
+        QString formatted = QString("$%1:%2#")
+                                .arg(message.first)
+                                .arg(message.second, 0, 'f', 3);
+
+        udp_socket->writeDatagram(formatted.toUtf8(), udp_server_ip, udp_server_port);
+    }
+}
+
+void MainWindow::sendMessage(tcmd_idx_t idx, double data)
+{
+    QString message = QString("$%1:%2#").arg(idx).arg(data, 0, 'f', 3);
+    qDebug() << message;
+    QByteArray byteData = message.toUtf8();
+    udp_socket->writeDatagram(byteData, udp_server_ip, udp_server_port);
 }
 
 void MainWindow::receiveMessage()
@@ -197,7 +268,7 @@ void MainWindow::receiveMessage()
         quint16 tpi_port;
         udp_socket->readDatagram(buffer.data(), buffer.size(), &tpi_ip, &tpi_port);
 
-        qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
+        //qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
         telemetry_t t;
 
         if(parse_telemetry(QString::fromUtf8(buffer), t))
@@ -211,10 +282,14 @@ void MainWindow::on_pushButton_em0_toggled(bool checked)
 {
     if (checked)
     {
+       sendMessage(TCMD_EM0, ui->textEdit_em0->toPlainText().toDouble());
+        qDebug() << ui->textEdit_em0->toPlainText().toDouble();
+
        ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));
     }
     else
     {
+        sendMessage(TCMD_EM0_STOP, 0.0);
         ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_off.png"));
     }
 }
@@ -224,10 +299,12 @@ void MainWindow::on_pushButton_em1_toggled(bool checked)
 {
     if (checked)
     {
+        sendMessage(TCMD_EM1, ui->textEdit_em1->toPlainText().toDouble());
         ui->pushButton_em1->setIcon(QIcon(":/assets/toggle_on.png"));
     }
     else
     {
+        sendMessage(TCMD_EM1_STOP, 0.0);
         ui->pushButton_em1->setIcon(QIcon(":/assets/toggle_off.png"));
     }
 }
@@ -237,10 +314,12 @@ void MainWindow::on_pushButton_em2_toggled(bool checked)
 {
     if (checked)
     {
+        sendMessage(TCMD_EM2, ui->textEdit_em2->toPlainText().toDouble());
         ui->pushButton_em2->setIcon(QIcon(":/assets/toggle_on.png"));
     }
     else
     {
+        sendMessage(TCMD_EM2_STOP, 0.0);
         ui->pushButton_em2->setIcon(QIcon(":/assets/toggle_off.png"));
     }
 }
@@ -250,10 +329,12 @@ void MainWindow::on_pushButton_em3_toggled(bool checked)
 {
     if (checked)
     {
+        sendMessage(TCMD_EM3, ui->textEdit_em3->toPlainText().toDouble());
         ui->pushButton_em3->setIcon(QIcon(":/assets/toggle_on.png"));
     }
     else
     {
+        sendMessage(TCMD_EM3_STOP, 0.0);
         ui->pushButton_em3->setIcon(QIcon(":/assets/toggle_off.png"));
     }
 }
@@ -262,10 +343,12 @@ void MainWindow::on_pushButton_em_enable_toggled(bool checked)
 {
     if (checked)
     {
+        sendMessage(TCMD_EM_ENABLE, 0.0);
         ui->pushButton_em_enable->setIcon(QIcon(":/assets/em_on.png"));
     }
     else
     {
+        sendMessage(TCMD_EM_STOP_ALL, 0.0);
         ui->pushButton_em_enable->setIcon(QIcon(":/assets/em_off.png"));
     }
 }

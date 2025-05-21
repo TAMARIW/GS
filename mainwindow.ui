@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -210,6 +210,19 @@ QPushButton:hover {
      <attribute name="title">
       <string>ToF</string>
      </attribute>
+     <widget class="QCustomPlot" name="widget_tof_plot" native="true">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>130</y>
+        <width>1221</width>
+        <height>681</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_coils">
      <attribute name="title">
