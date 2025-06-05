@@ -14,6 +14,13 @@ typedef struct
 
 typedef enum
 {
+    EM_ON,
+    EM_OFF,
+    EM_STANDBY
+} em_state_t;
+
+typedef enum
+{
     // PID gains
     TCMD_EM_KP,
     TCMD_EM_KI,
@@ -67,10 +74,13 @@ private slots:
 
     void on_pushButton_em_gain_clicked();
 
+    void on_pushButton_em_pow_clicked(bool checked);
+
 private:
     void populate_telemetry(const telemetry_t &t);
 
     QVector<double> tms, d[4], c[4];
+    em_state_t em_state[4] = {EM_OFF, EM_OFF, EM_OFF, EM_OFF};
 
     Ui::MainWindow *ui;
     QUdpSocket *udp_socket;

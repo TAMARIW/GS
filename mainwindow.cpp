@@ -290,8 +290,9 @@ void MainWindow::on_pushButton_em0_toggled(bool checked)
 
         ui->pushButton_em0->setIcon(QIcon(":/assets/toggle_on.png"));
 
-        QPixmap pix(":/assets/em_on.png");
+        QPixmap pix(":/assets/em_standby.png");
         ui->label_em0->setPixmap(pix);
+        em_state[0] = EM_STANDBY;
     }
     else
     {
@@ -300,6 +301,7 @@ void MainWindow::on_pushButton_em0_toggled(bool checked)
 
         QPixmap pix(":/assets/em_off.png");
         ui->label_em0->setPixmap(pix);
+        em_state[0] = EM_OFF;
     }
 }
 
@@ -311,8 +313,9 @@ void MainWindow::on_pushButton_em1_toggled(bool checked)
         sendMessage(TCMD_EM1, ui->textEdit_em1->toPlainText().toDouble());
         ui->pushButton_em1->setIcon(QIcon(":/assets/toggle_on.png"));
 
-        QPixmap pix(":/assets/em_on.png");
+        QPixmap pix(":/assets/em_standby.png");
         ui->label_em1->setPixmap(pix);
+        em_state[1] = EM_STANDBY;
     }
     else
     {
@@ -321,6 +324,7 @@ void MainWindow::on_pushButton_em1_toggled(bool checked)
 
         QPixmap pix(":/assets/em_off.png");
         ui->label_em1->setPixmap(pix);
+        em_state[1] = EM_OFF;
     }
 }
 
@@ -332,8 +336,9 @@ void MainWindow::on_pushButton_em2_toggled(bool checked)
         sendMessage(TCMD_EM2, ui->textEdit_em2->toPlainText().toDouble());
         ui->pushButton_em2->setIcon(QIcon(":/assets/toggle_on.png"));
 
-        QPixmap pix(":/assets/em_on.png");
+        QPixmap pix(":/assets/em_standby.png");
         ui->label_em2->setPixmap(pix);
+        em_state[2] = EM_STANDBY;
     }
     else
     {
@@ -342,6 +347,7 @@ void MainWindow::on_pushButton_em2_toggled(bool checked)
 
         QPixmap pix(":/assets/em_off.png");
         ui->label_em2->setPixmap(pix);
+        em_state[2] = EM_OFF;
     }
 }
 
@@ -353,8 +359,9 @@ void MainWindow::on_pushButton_em3_toggled(bool checked)
         sendMessage(TCMD_EM3, ui->textEdit_em3->toPlainText().toDouble());
         ui->pushButton_em3->setIcon(QIcon(":/assets/toggle_on.png"));
 
-        QPixmap pix(":/assets/em_on.png");
+        QPixmap pix(":/assets/em_standby.png");
         ui->label_em3->setPixmap(pix);
+        em_state[3] = EM_STANDBY;
     }
     else
     {
@@ -363,6 +370,7 @@ void MainWindow::on_pushButton_em3_toggled(bool checked)
 
         QPixmap pix(":/assets/em_off.png");
         ui->label_em3->setPixmap(pix);
+        em_state[3] = EM_OFF;
     }
 }
 
@@ -429,11 +437,43 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
     }
 }
 
-
-
 void MainWindow::on_pushButton_em_gain_clicked()
 {
     sendMessage(TCMD_EM_KP, ui->textEdit_em_kp->toPlainText().toDouble());
     sendMessage(TCMD_EM_KI, ui->textEdit_em_ki->toPlainText().toDouble());
+}
+
+void MainWindow::on_pushButton_em_pow_clicked(bool checked)
+{
+    if (checked)
+    {
+        ui->pushButton_em_pow->setIcon(QIcon(":/assets/pow_on.png"));
+
+
+        QPixmap pix(":/assets/em_on.png");
+
+        if (em_state[0] == EM_STANDBY){ ui->label_em0->setPixmap(pix); sendMessage(TCMD_EM0, ui->textEdit_em0->toPlainText().toDouble()); }
+        if (em_state[1] == EM_STANDBY){ ui->label_em1->setPixmap(pix); sendMessage(TCMD_EM1, ui->textEdit_em1->toPlainText().toDouble()); }
+        if (em_state[2] == EM_STANDBY){ ui->label_em2->setPixmap(pix); sendMessage(TCMD_EM2, ui->textEdit_em2->toPlainText().toDouble()); }
+        if (em_state[3] == EM_STANDBY){ ui->label_em3->setPixmap(pix); sendMessage(TCMD_EM3, ui->textEdit_em3->toPlainText().toDouble()); }
+
+        ui->label_em1->setPixmap(pix);
+    }
+    else
+    {
+        ui->pushButton_em_pow->setIcon(QIcon(":/assets/pow_off.png"));
+
+        QPixmap pix(":/assets/em_standby.png");
+
+        if (em_state[0] == EM_STANDBY){ ui->label_em0->setPixmap(pix); }
+        if (em_state[1] == EM_STANDBY){ ui->label_em1->setPixmap(pix); }
+        if (em_state[2] == EM_STANDBY){ ui->label_em2->setPixmap(pix); }
+        if (em_state[3] == EM_STANDBY){ ui->label_em3->setPixmap(pix); }
+
+        sendMessage(TCMD_EM0_STOP, 0.0);
+        sendMessage(TCMD_EM1_STOP, 0.0);
+        sendMessage(TCMD_EM2_STOP, 0.0);
+        sendMessage(TCMD_EM3_STOP, 0.0);
+    }
 }
 

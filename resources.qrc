@@ -8,5 +8,11 @@
         <file>assets/wifi_on.png</file>
         <file>assets/em_on.png</file>
         <file>assets/em_off.png</file>
+        <file>assets/pow_off.png</file>
+        <file>assets/pow_on.png</file>
+        <file>assets/browse.png</file>
+        <file>assets/memory_200dp_666666_FILL0_wght400_GRAD0_opsz48.png</file>
+        <file>assets/toggle_standby.png</file>
+        <file>assets/em_standby.png</file>
     </qresource>
 </RCC>

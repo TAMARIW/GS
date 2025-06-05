@@ -39,9 +39,9 @@
      <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
        <rect>
-        <x>680</x>
-        <y>210</y>
-        <width>761</width>
+        <x>371</x>
+        <y>250</y>
+        <width>641</width>
         <height>301</height>
        </rect>
       </property>
@@ -105,7 +105,7 @@
         <rect>
          <x>300</x>
          <y>100</y>
-         <width>181</width>
+         <width>211</width>
          <height>31</height>
         </rect>
        </property>
@@ -145,7 +145,7 @@
       <widget class="QPushButton" name="pushButton_udp_connect">
        <property name="geometry">
         <rect>
-         <x>350</x>
+         <x>310</x>
          <y>220</y>
          <width>50</width>
          <height>41</height>
@@ -189,8 +189,8 @@ QPushButton:hover {
      <widget class="QLabel" name="label">
       <property name="geometry">
        <rect>
-        <x>1870</x>
-        <y>20</y>
+        <x>1820</x>
+        <y>30</y>
         <width>51</width>
         <height>51</height>
        </rect>
@@ -204,6 +204,167 @@ QPushButton:hover {
       <property name="scaledContents">
        <bool>true</bool>
       </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="geometry">
+       <rect>
+        <x>1030</x>
+        <y>250</y>
+        <width>511</width>
+        <height>301</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+        <pointsize>15</pointsize>
+        <bold>true</bold>
+        <kerning>false</kerning>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LayoutDirection::LeftToRight</enum>
+      </property>
+      <property name="title">
+       <string>FLASH STM32</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>110</y>
+         <width>251</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="pushButton_browse">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    border: none;
+    background: transparent;
+    outline: none;
+	padding: 0px;
+    border-radius: 50%;
+	min-width: 50px;
+}
+
+QPushButton:hover {
+    background: rgba(0, 0, 0, 20%);
+}</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/assets/browse.png</normaloff>:/assets/browse.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>50</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="pushButton_flash">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    border: none;
+    background: transparent;
+    outline: none;
+	padding: 0px;
+    border-radius: 50%;
+	min-width: 50px;
+}
+
+QPushButton:hover {
+    background: rgba(0, 0, 0, 20%);
+}</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/assets/memory_200dp_666666_FILL0_wght400_GRAD0_opsz48.png</normaloff>:/assets/memory_200dp_666666_FILL0_wght400_GRAD0_opsz48.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>50</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_em0_23">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Courier New</family>
+            <pointsize>15</pointsize>
+            <bold>false</bold>
+            <kerning>false</kerning>
+           </font>
+          </property>
+          <property name="text">
+           <string>.HEX</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_em0_24">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Courier New</family>
+            <pointsize>15</pointsize>
+            <bold>false</bold>
+            <kerning>false</kerning>
+           </font>
+          </property>
+          <property name="text">
+           <string>FLASH</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_tof">
@@ -1257,6 +1418,46 @@ QPushButton:hover {
          <pixmap resource="resources.qrc">:/assets/em_off.png</pixmap>
         </property>
         <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_em_pow">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>79</y>
+          <width>50</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+    border: none;
+    background: transparent;
+    outline: none;
+	padding: 0px;
+    border-radius: 50%;
+	min-width: 50px;
+}
+</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/assets/pow_off.png</normaloff>:/assets/pow_off.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>50</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="checkable">
          <bool>true</bool>
         </property>
        </widget>
