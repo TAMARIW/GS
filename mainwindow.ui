@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -231,7 +231,7 @@ QPushButton:hover {
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>130</x>

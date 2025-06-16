@@ -5,6 +5,11 @@
 #include <QUdpSocket>
 #include <QQueue>
 
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QFile>
+#include <QUrl>
+
 typedef struct
 {
     float d[4]; // ToF measurements [mm]
@@ -76,11 +81,18 @@ private slots:
 
     void on_pushButton_em_pow_clicked(bool checked);
 
+    void on_pushButton_browse_clicked();
+
+    void on_pushButton_flash_clicked();
+
 private:
     void populate_telemetry(const telemetry_t &t);
 
     QVector<double> tms, d[4], c[4];
     em_state_t em_state[4] = {EM_OFF, EM_OFF, EM_OFF, EM_OFF};
+
+    QString hexFilePath;
+    QNetworkAccessManager *manager;
 
     Ui::MainWindow *ui;
     QUdpSocket *udp_socket;

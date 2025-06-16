@@ -5,6 +5,14 @@
 #define PID_CURRENT_KP 0.065
 #define PID_CURRENT_KI 0.3
 
+#include <QFileDialog>
+#include <QString>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QFile>
+#include <QUrl>
+#include <QNetworkReply>
+
 uint16_t crc16_ccitt(const QByteArray &data)
 {
     uint16_t crc = 0xFFFF;
@@ -218,7 +226,8 @@ MainWindow::MainWindow(QWidget *parent)
         ui->widget_tof_plot->replot();
     });
 
-    timer_plot_mag->start(70);
+    timer_plot_mag->start(70);    
+    manager = new QNetworkAccessManager(this);
 
     connect(udp_socket, &QUdpSocket::bytesWritten,
             this, &MainWindow::handleBytesWritten);
@@ -470,3 +479,70 @@ void MainWindow::on_pushButton_em_pow_clicked(bool checked)
         sendMessage(TCMD_EM3_STOP, 0.0);
     }
 }
+
+QString hexFilePath = "C:/Users/sriza/OneDrive/Documents/rms/git/job/hiwi/dock/build/main.hex";
+
+void MainWindow::on_pushButton_browse_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        tr("Open HEX File"),
+        QString(),
+        tr("HEX Files (*.hex);;All Files (*)")
+        );
+
+    if (!fileName.isEmpty()) {
+        hexFilePath = fileName;
+        qDebug() << "Selected HEX file:" << hexFilePath;
+    }
+}
+
+void MainWindow::on_pushButton_flash_clicked()
+{
+    if (hexFilePath.isEmpty()) {
+        QMessageBox::warning(this, "No File", "Please select a HEX file first.");
+        return;
+    }
+
+    QString piUsername = "tamariw";
+    QString piHost = "192.168.0.144";
+    QString remoteDir = "/home/tamariw/";
+
+    QString target = QString("%1@%2:%3").arg(piUsername, piHost, remoteDir);
+
+    QStringList arguments;
+    arguments << hexFilePath << target;
+
+    QProcess *scp = new QProcess(this);
+    scp->setProcessChannelMode(QProcess::MergedChannels); // Capture stderr too
+
+    // Log command being run
+    qDebug() << "Running SCP:" << "scp" << arguments;
+
+    // Connect finished first — capture all output
+    connect(scp, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [=](int exitCode, QProcess::ExitStatus status) {
+                QString output = scp->readAll();
+                qDebug() << "SCP finished. Exit code:" << exitCode << ", Status:" << status;
+                qDebug() << "SCP Output:\n" << output;
+
+                if (exitCode == 0 && status == QProcess::NormalExit) {
+                    QMessageBox::information(this, "Success", "HEX file uploaded to Raspberry Pi!");
+                } else {
+                    QMessageBox::critical(this, "SCP Error", "SCP upload failed.\n\n" + output);
+                }
+
+                scp->deleteLater();
+            });
+
+    // Start process
+    scp->start("scp", arguments);
+
+    if (!scp->waitForStarted()) {
+        QMessageBox::critical(this, "Error", "Failed to start SCP process.");
+        qDebug() << "Failed to start SCP process:" << scp->errorString();
+        scp->deleteLater();
+        return;
+    }
+}
+
