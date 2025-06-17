@@ -115,6 +115,8 @@ void MainWindow::populate_telemetry(const telemetry_t &t)
         {
             d[i].removeFirst();
             c[i].removeFirst();
+            kf_d[i].removeFirst();
+            kf_v[i].removeFirst();
         }
     }
 }
