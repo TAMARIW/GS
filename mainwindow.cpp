@@ -187,6 +187,40 @@ void tof_init_plot(QCustomPlot *p)
     p->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 }
 
+void estpos_init_plot(QCustomPlot *p)
+{
+    QPen pen_x(QColor(0, 114, 189));
+    QPen pen_y(QColor(217, 83, 25));
+
+    pen_x.setWidth(2);
+    pen_y.setWidth(2);
+
+    p->xAxis->setLabel("t [s]");
+    p->yAxis->setLabel("Relative position [mm]");
+    p->xAxis->setLabelFont(QFont("Courier New", 12));
+    p->yAxis->setLabelFont(QFont("Courier New", 12));
+    p->xAxis->setLabelColor(Qt::blue);
+    p->yAxis->setLabelColor(Qt::blue);
+
+    p->addGraph();
+    p->addGraph();
+    p->graph(0)->setName("Raw");
+    p->graph(1)->setName("KF");
+    p->legend->setVisible(true);
+    p->graph(0)->setPen(pen_x);
+    p->graph(1)->setPen(pen_y);
+
+    p->legend->setBrush(Qt::NoBrush);
+    p->setBackground(Qt::transparent);
+    p->axisRect()->setBackground(Qt::transparent);
+    p->setAttribute(Qt::WA_TranslucentBackground);
+    p->setStyleSheet("background: transparent;");
+    p->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+
+    p->replot();
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -208,6 +242,20 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
     tof_init_plot(ui->widget_tof_plot);
+    estpos_init_plot(ui->widget_plot_est0);
+    estpos_init_plot(ui->widget_plot_est1);
+    estpos_init_plot(ui->widget_plot_est2);
+    estpos_init_plot(ui->widget_plot_est3);
+
+    // Add title
+    ui->widget_plot_est0->plotLayout()->insertRow(0);
+    ui->widget_plot_est0->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_est0, "TF0", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_est1->plotLayout()->insertRow(0);
+    ui->widget_plot_est1->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_est1, "TF1", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_est2->plotLayout()->insertRow(0);
+    ui->widget_plot_est2->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_est2, "TF2", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_est3->plotLayout()->insertRow(0);
+    ui->widget_plot_est3->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_est3, "TF3", QFont("Courier New", 14, QFont::Bold)));
 
     timer_plot_mag = new QTimer(this);
 
@@ -218,6 +266,20 @@ MainWindow::MainWindow(QWidget *parent)
             ui->widget_em_plot->graph(i)->setData(tms, c[i]);
             ui->widget_tof_plot->graph(i)->setData(tms, d[i]);
         }
+
+        ui->widget_plot_est0->graph(0)->setData(tms, d[0]);
+        ui->widget_plot_est1->graph(0)->setData(tms, d[1]);
+        ui->widget_plot_est2->graph(0)->setData(tms, d[2]);
+        ui->widget_plot_est3->graph(0)->setData(tms, d[3]);
+
+        ui->widget_plot_est0->rescaleAxes();
+        ui->widget_plot_est0->replot();
+        ui->widget_plot_est1->rescaleAxes();
+        ui->widget_plot_est1->replot();
+        ui->widget_plot_est2->rescaleAxes();
+        ui->widget_plot_est2->replot();
+        ui->widget_plot_est3->rescaleAxes();
+        ui->widget_plot_est3->replot();
 
         ui->widget_em_plot->rescaleAxes();
         ui->widget_em_plot->replot();

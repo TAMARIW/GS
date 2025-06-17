@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -1464,6 +1464,35 @@ QPushButton:hover {
       </widget>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Estimation</string>
+     </attribute>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1941</width>
+        <height>931</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QCustomPlot" name="widget_plot_est0" native="true"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCustomPlot" name="widget_plot_est1" native="true"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCustomPlot" name="widget_plot_est2" native="true"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCustomPlot" name="widget_plot_est3" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1482,7 +1511,7 @@ QPushButton:hover {
   <customwidget>
    <class>QCustomPlot</class>
    <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
+   <header location="global">qcustomplot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
