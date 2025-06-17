@@ -65,6 +65,18 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
                 t.c[i] = values[i].toFloat();
             }
         }
+        else if (type == "e") // KF distance
+        {
+            for (int i = 0; i < 4; ++i) {
+                t.kf_d[i] = values[i].toFloat();
+            }
+        }
+        else if (type == "f") // KF velocity
+        {
+            for (int i = 0; i < 4; ++i) {
+                t.kf_v[i] = values[i].toFloat();
+            }
+        }
         else if (type == "r") // CRC
         {
             t.crc = values[0].toUInt();
@@ -90,6 +102,8 @@ void MainWindow::populate_telemetry(const telemetry_t &t)
     {
         d[i].append(t.d[i]);
         c[i].append(t.c[i]);
+        kf_d[i].append(t.kf_d[i]);
+        kf_v[i].append(t.kf_v[i]);
     }
 
 
@@ -236,7 +250,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em_ki->setText(QString::number(PID_CURRENT_KI));
     ui->textEdit_em_fc->setText(QString::number(0.0));
     ui->textEdit_em_fs->setText(QString::number(0.0));
-    ui->textEdit_udp_ip->setText("192.168.0.100");
+    ui->textEdit_udp_ip->setText("192.168.137.5");
     ui->textEdit_udp_port->setText("8080");
 
     qDebug() << "Hello World\n",
@@ -271,6 +285,11 @@ MainWindow::MainWindow(QWidget *parent)
         ui->widget_plot_est1->graph(0)->setData(tms, d[1]);
         ui->widget_plot_est2->graph(0)->setData(tms, d[2]);
         ui->widget_plot_est3->graph(0)->setData(tms, d[3]);
+
+        ui->widget_plot_est0->graph(1)->setData(tms, kf_d[0]);
+        ui->widget_plot_est1->graph(1)->setData(tms, kf_d[1]);
+        ui->widget_plot_est2->graph(1)->setData(tms, kf_d[2]);
+        ui->widget_plot_est3->graph(1)->setData(tms, kf_d[3]);
 
         ui->widget_plot_est0->rescaleAxes();
         ui->widget_plot_est0->replot();
@@ -342,7 +361,7 @@ void MainWindow::receiveMessage()
         quint16 tpi_port;
         udp_socket->readDatagram(buffer.data(), buffer.size(), &tpi_ip, &tpi_port);
 
-        //qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
+        qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
         telemetry_t t;
 
         if(parse_telemetry(QString::fromUtf8(buffer), t))
@@ -567,7 +586,7 @@ void MainWindow::on_pushButton_flash_clicked()
     }
 
     QString piUsername = "tamariw";
-    QString piHost = "192.168.0.144";
+    QString piHost = "192.168.137.5";
     QString remoteDir = "/home/tamariw/";
 
     QString target = QString("%1@%2:%3").arg(piUsername, piHost, remoteDir);

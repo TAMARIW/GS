@@ -14,6 +14,8 @@ typedef struct
 {
     float d[4]; // ToF measurements [mm]
     float c[4]; // Electromagnet current feedback [mA]
+    float kf_d[4]; // Kalman Filter distance estimates
+    float kf_v[4]; // Kalman Filter velocity estimates
     uint16_t crc;
 } telemetry_t;
 
@@ -88,7 +90,7 @@ private slots:
 private:
     void populate_telemetry(const telemetry_t &t);
 
-    QVector<double> tms, d[4], c[4];
+    QVector<double> tms, d[4], c[4], kf_d[4], kf_v[4];
     em_state_t em_state[4] = {EM_OFF, EM_OFF, EM_OFF, EM_OFF};
 
     QString hexFilePath;
