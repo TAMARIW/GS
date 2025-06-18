@@ -133,6 +133,9 @@ void em_init_plot(QCustomPlot *p)
     pen_z.setWidth(2);
     pen_w.setWidth(2);
 
+    p->plotLayout()->insertRow(0);
+    p->plotLayout()->addElement(0, 0, new QCPTextElement(p, "Current measurements through coils", QFont("Courier New", 14, QFont::Bold)));
+
     p->xAxis->setLabel("t [s]");
     p->yAxis->setLabel("Current [mA]");
     p->xAxis->setLabelFont(QFont("Courier New", 12));
@@ -174,8 +177,11 @@ void tof_init_plot(QCustomPlot *p)
     pen_z.setWidth(2);
     pen_w.setWidth(2);
 
+    p->plotLayout()->insertRow(0);
+    p->plotLayout()->addElement(0, 0, new QCPTextElement(p, "ToF measurements", QFont("Courier New", 14, QFont::Bold)));
+
     p->xAxis->setLabel("t [s]");
-    p->yAxis->setLabel("Current [mA]");
+    p->yAxis->setLabel("Relative distance [mm]");
     p->xAxis->setLabelFont(QFont("Courier New", 12));
     p->yAxis->setLabelFont(QFont("Courier New", 12));
     p->xAxis->setLabelColor(Qt::blue);
