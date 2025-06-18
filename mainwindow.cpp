@@ -236,6 +236,31 @@ void estpos_init_plot(QCustomPlot *p)
     p->replot();
 }
 
+void estvel_init_plot(QCustomPlot *p)
+{
+    QPen pen_x(QColor(0, 114, 189));
+
+    pen_x.setWidth(2);
+
+    p->xAxis->setLabel("t [s]");
+    p->yAxis->setLabel("Relative velocity [mm/s]");
+    p->xAxis->setLabelFont(QFont("Courier New", 12));
+    p->yAxis->setLabelFont(QFont("Courier New", 12));
+    p->xAxis->setLabelColor(Qt::blue);
+    p->yAxis->setLabelColor(Qt::blue);
+
+    p->addGraph();
+    p->graph(0)->setPen(pen_x);
+
+    p->legend->setBrush(Qt::NoBrush);
+    p->setBackground(Qt::transparent);
+    p->axisRect()->setBackground(Qt::transparent);
+    p->setAttribute(Qt::WA_TranslucentBackground);
+    p->setStyleSheet("background: transparent;");
+    p->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+
+    p->replot();
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -262,8 +287,20 @@ MainWindow::MainWindow(QWidget *parent)
     estpos_init_plot(ui->widget_plot_est1);
     estpos_init_plot(ui->widget_plot_est2);
     estpos_init_plot(ui->widget_plot_est3);
+    estvel_init_plot(ui->widget_plot_estv0);
+    estvel_init_plot(ui->widget_plot_estv1);
+    estvel_init_plot(ui->widget_plot_estv2);
+    estvel_init_plot(ui->widget_plot_estv3);
 
-    // Add title
+    ui->widget_plot_estv0->plotLayout()->insertRow(0);
+    ui->widget_plot_estv0->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_estv0, "TF0", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_estv1->plotLayout()->insertRow(0);
+    ui->widget_plot_estv1->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_estv1, "TF1", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_estv2->plotLayout()->insertRow(0);
+    ui->widget_plot_estv2->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_estv2, "TF2", QFont("Courier New", 14, QFont::Bold)));
+    ui->widget_plot_estv3->plotLayout()->insertRow(0);
+    ui->widget_plot_estv3->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_estv3, "TF3", QFont("Courier New", 14, QFont::Bold)));
+
     ui->widget_plot_est0->plotLayout()->insertRow(0);
     ui->widget_plot_est0->plotLayout()->addElement(0, 0, new QCPTextElement(ui->widget_plot_est0, "TF0", QFont("Courier New", 14, QFont::Bold)));
     ui->widget_plot_est1->plotLayout()->insertRow(0);
@@ -292,6 +329,20 @@ MainWindow::MainWindow(QWidget *parent)
         ui->widget_plot_est1->graph(1)->setData(tms, kf_d[1]);
         ui->widget_plot_est2->graph(1)->setData(tms, kf_d[2]);
         ui->widget_plot_est3->graph(1)->setData(tms, kf_d[3]);
+
+        ui->widget_plot_estv0->graph(0)->setData(tms, kf_v[0]);
+        ui->widget_plot_estv1->graph(0)->setData(tms, kf_v[1]);
+        ui->widget_plot_estv2->graph(0)->setData(tms, kf_v[2]);
+        ui->widget_plot_estv3->graph(0)->setData(tms, kf_v[3]);
+
+        ui->widget_plot_estv0->rescaleAxes();
+        ui->widget_plot_estv0->replot();
+        ui->widget_plot_estv1->rescaleAxes();
+        ui->widget_plot_estv1->replot();
+        ui->widget_plot_estv2->rescaleAxes();
+        ui->widget_plot_estv2->replot();
+        ui->widget_plot_estv3->rescaleAxes();
+        ui->widget_plot_estv3->replot();
 
         ui->widget_plot_est0->rescaleAxes();
         ui->widget_plot_est0->replot();
@@ -466,15 +517,6 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
 {
     QString ip_str = ui->textEdit_udp_ip->toPlainText();
     QString port_str = ui->textEdit_udp_port->toPlainText();
-/*
-    if (ip_str != "192.168.0.100") {
-        qDebug() << "Invalid server IP. Connection will not be made.";
-        QPixmap pix(":/assets/wifi_off.png");
-        ui->label->setPixmap(pix);
-        ui->pushButton_udp_connect->setChecked(false); // Reset the button
-        return; // Exit the function early if the IP is wrong
-    }
-*/
 
     if (ip_str.isEmpty() || port_str.isEmpty()) {
         qDebug() << "Please enter a valid IP and port.";

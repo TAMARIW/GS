@@ -30,11 +30,11 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
-      <string>Connection</string>
+      <string>CONNECT</string>
      </attribute>
      <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
@@ -367,27 +367,9 @@ QPushButton:hover {
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_tof">
-     <attribute name="title">
-      <string>ToF</string>
-     </attribute>
-     <widget class="QCustomPlot" name="widget_tof_plot" native="true">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>130</y>
-        <width>1221</width>
-        <height>681</height>
-       </rect>
-      </property>
-      <property name="cursor">
-       <cursorShape>PointingHandCursor</cursorShape>
-      </property>
-     </widget>
-    </widget>
     <widget class="QWidget" name="tab_coils">
      <attribute name="title">
-      <string>Magnets</string>
+      <string>COIL</string>
      </attribute>
      <widget class="QGroupBox" name="groupBox_em_gains">
       <property name="geometry">
@@ -1464,15 +1446,33 @@ QPushButton:hover {
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab">
+    <widget class="QWidget" name="tab_tof">
      <attribute name="title">
-      <string>Estimation</string>
+      <string>ToF</string>
      </attribute>
-     <widget class="QWidget" name="">
+     <widget class="QCustomPlot" name="widget_tof_plot" native="true">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>10</y>
+        <x>60</x>
+        <y>130</y>
+        <width>1221</width>
+        <height>681</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>KF-POS</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
         <width>1941</width>
         <height>931</height>
        </rect>
@@ -1489,6 +1489,35 @@ QPushButton:hover {
        </item>
        <item row="1" column="1">
         <widget class="QCustomPlot" name="widget_plot_est3" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_5">
+     <attribute name="title">
+      <string>KF-VEL</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget_8">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1941</width>
+        <height>931</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="0" column="0">
+        <widget class="QCustomPlot" name="widget_plot_estv0" native="true"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCustomPlot" name="widget_plot_estv1" native="true"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCustomPlot" name="widget_plot_estv2" native="true"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCustomPlot" name="widget_plot_estv3" native="true"/>
        </item>
       </layout>
      </widget>
