@@ -1,6 +1,6 @@
 # dock-gs
 
-Ground station software for interfacing with the [docking electronics hardware](https://github.com/tamariw/docking-stm) of [Tamariw](https://de.wikipedia.org/wiki/Tamariw) satellites.
+Ground station software for interfacing with the [docking electronics hardware](https://github.com/tamariw/docking-stm) of [Tamariw](https://de.wikipedia.org/wiki/Tamariw) satellites. Please refer to [the instructions](desktop.md) for operating the desktop computer to control the satellites.
 
 ### Notes
 
