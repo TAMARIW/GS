@@ -87,6 +87,8 @@ private slots:
 
     void on_pushButton_flash_clicked();
 
+    void on_pushButton_flash_2_clicked();
+
 private:
     void populate_telemetry(const telemetry_t &t);
 

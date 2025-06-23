@@ -672,3 +672,10 @@ void MainWindow::on_pushButton_flash_clicked()
         pscp->deleteLater();
     }
 }
+
+void MainWindow::on_pushButton_flash_2_clicked()
+{
+    QByteArray data = "Flash Flash";
+    udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+}
+
