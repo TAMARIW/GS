@@ -420,7 +420,7 @@ void MainWindow::receiveMessage()
         quint16 tpi_port;
         udp_socket->readDatagram(buffer.data(), buffer.size(), &tpi_ip, &tpi_port);
 
-        qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
+        //qDebug() << "Received from" << tpi_ip.toString() << ":" << tpi_port << "->" << QString::fromUtf8(buffer);
         telemetry_t t;
 
         if(parse_telemetry(QString::fromUtf8(buffer), t))
@@ -635,45 +635,40 @@ void MainWindow::on_pushButton_flash_clicked()
         return;
     }
 
-    QString piUsername = "tamariw";
-    QString piHost = "192.168.137.5";
-    QString remoteDir = "/home/tamariw/";
+    QString password = "tamarix"; // ❗ Hardcoded password for testing ONLY
+    QString pscpPath = "pscp";    // Make sure pscp.exe is in PATH or use full path
 
-    QString target = QString("%1@%2:%3").arg(piUsername, piHost, remoteDir);
+    QString user = "tamarix";
+    QString host = "tamarix.local";
+    QString remotePath = "/home/tamarix/";
 
     QStringList arguments;
-    arguments << hexFilePath << target;
+    arguments << "-pw" << password
+              << hexFilePath
+              << QString("%1@%2:%3").arg(user, host, remotePath);
 
-    QProcess *scp = new QProcess(this);
-    scp->setProcessChannelMode(QProcess::MergedChannels); // Capture stderr too
+    QProcess *pscp = new QProcess(this);
+    pscp->setProcessChannelMode(QProcess::MergedChannels);
 
-    // Log command being run
-    qDebug() << "Running SCP:" << "scp" << arguments;
-
-    // Connect finished first — capture all output
-    connect(scp, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    connect(pscp, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [=](int exitCode, QProcess::ExitStatus status) {
-                QString output = scp->readAll();
-                qDebug() << "SCP finished. Exit code:" << exitCode << ", Status:" << status;
-                qDebug() << "SCP Output:\n" << output;
+                QString output = pscp->readAll();
+                qDebug() << "PSCP Output:\n" << output;
 
                 if (exitCode == 0 && status == QProcess::NormalExit) {
-                    QMessageBox::information(this, "Success", "HEX file uploaded to Raspberry Pi!");
+                    QMessageBox::information(this, "Success", "HEX file uploaded successfully!");
                 } else {
-                    QMessageBox::critical(this, "SCP Error", "SCP upload failed.\n\n" + output);
+                    QMessageBox::critical(this, "Error",
+                                          QString("Upload failed (code %1)\n\n%2").arg(exitCode).arg(output));
                 }
-
-                scp->deleteLater();
+                pscp->deleteLater();
             });
 
-    // Start process
-    scp->start("scp", arguments);
+    pscp->start(pscpPath, arguments);
 
-    if (!scp->waitForStarted()) {
-        QMessageBox::critical(this, "Error", "Failed to start SCP process.");
-        qDebug() << "Failed to start SCP process:" << scp->errorString();
-        scp->deleteLater();
-        return;
+    if (!pscp->waitForStarted(3000)) {
+        QMessageBox::critical(this, "Error", "Failed to start PSCP process.");
+        qDebug() << "Failed to start PSCP process:" << pscp->errorString();
+        pscp->deleteLater();
     }
 }
-
