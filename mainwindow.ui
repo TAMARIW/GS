@@ -186,25 +186,6 @@ QPushButton:hover {
        </property>
       </widget>
      </widget>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>1820</x>
-        <y>30</y>
-        <width>51</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap resource="resources.qrc">:/assets/wifi_off.png</pixmap>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
-      </property>
-     </widget>
      <widget class="QGroupBox" name="groupBox_3">
       <property name="geometry">
        <rect>
@@ -231,13 +212,13 @@ QPushButton:hover {
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>130</x>
          <y>120</y>
          <width>281</width>
-         <height>81</height>
+         <height>88</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -1642,7 +1623,7 @@ QPushButton:hover {
          <x>230</x>
          <y>50</y>
          <width>258</width>
-         <height>227</height>
+         <height>131</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1783,7 +1764,7 @@ QPushButton:hover {
      <x>0</x>
      <y>0</y>
      <width>1970</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

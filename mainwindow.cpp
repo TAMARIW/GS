@@ -13,6 +13,9 @@
 #include <QUrl>
 #include <QNetworkReply>
 
+#include <QUdpSocket>           // For UDP socket functionality
+#include <QHostInfo>
+
 uint16_t crc16_ccitt(const QByteArray &data)
 {
     uint16_t crc = 0xFFFF;
@@ -283,7 +286,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em_ki->setText(QString::number(PID_CURRENT_KI));
     ui->textEdit_em_fc->setText(QString::number(0.0));
     ui->textEdit_em_fs->setText(QString::number(0.0));
-    ui->textEdit_udp_ip->setText("192.168.137.5");
+    ui->textEdit_udp_ip->setText("tamariw.local");
     ui->textEdit_udp_port->setText("8080");
 
     qDebug() << "Hello World\n",
@@ -366,7 +369,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->widget_tof_plot->replot();
     });
 
-    timer_plot_mag->start(70);    
+    timer_plot_mag->start(70);
     manager = new QNetworkAccessManager(this);
 
     connect(udp_socket, &QUdpSocket::bytesWritten,
@@ -518,59 +521,89 @@ void MainWindow::on_pushButton_em3_toggled(bool checked)
         em_state[3] = EM_OFF;
     }
 }
-
 void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
 {
     QString ip_str = ui->textEdit_udp_ip->toPlainText();
     QString port_str = ui->textEdit_udp_port->toPlainText();
 
     if (ip_str.isEmpty() || port_str.isEmpty()) {
-        qDebug() << "Please enter a valid IP and port.";
+        qDebug() << "Please enter a valid hostname/IP and port.";
         return;
     }
 
-    QHostAddress serverIp(ip_str);
     quint16 serverPort = port_str.toUInt();
+    if (serverPort == 0) {
+        qDebug() << "Invalid port number.";
+        QPixmap pix(":/assets/router.png");
+        ui->pushButton_udp_connect->setIcon(pix);
+        ui->pushButton_udp_connect->setChecked(false);
+        return;
+    }
 
-    if (!serverIp.isNull() && serverPort != 0) {
+    // Resolve hostname (including .local) to IP
+    QHostInfo::lookupHost(ip_str, this, [=](const QHostInfo &hostInfo) {
+        if (hostInfo.error() != QHostInfo::NoError) {
+            qDebug() << "Hostname resolution failed:" << hostInfo.errorString();
+            QPixmap pix(":/assets/router.png");
+            ui->pushButton_udp_connect->setIcon(pix);
+            ui->pushButton_udp_connect->setChecked(false);
+            return;
+        }
+
+        QList<QHostAddress> addresses = hostInfo.addresses();
+        if (addresses.isEmpty()) {
+            qDebug() << "No IP address found for" << ip_str;
+            QPixmap pix(":/assets/router.png");
+            ui->pushButton_udp_connect->setIcon(pix);
+            ui->pushButton_udp_connect->setChecked(false);
+            return;
+        }
+
+        // Use the first resolved IP (IPv4 preferred)
+        QHostAddress serverIp;
+        for (const QHostAddress &addr : addresses) {
+            if (addr.protocol() == QAbstractSocket::IPv4Protocol) {
+                serverIp = addr;
+                break;
+            }
+        }
+        if (serverIp.isNull()) {
+            serverIp = addresses.first(); // Fallback to IPv6 if no IPv4
+        }
+
         udp_server_ip = serverIp;
         udp_server_port = serverPort;
-        qDebug() << "Configured server:" << udp_server_ip.toString() << udp_server_port;
+        qDebug() << "Resolved server:" << ip_str << "->" << udp_server_ip.toString() << ":" << udp_server_port;
 
         if (checked) {
-            // Start the UDP connection and begin receiving
+            // Start UDP connection
             if (udp_socket->bind(QHostAddress::AnyIPv4, 8081)) {
                 connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
                 qDebug() << "UDP Enabled. Receiving from:" << udp_socket->localAddress().toString() << udp_socket->localPort();
 
                 QByteArray data = "Hello from Qt";
-                udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+                udp_socket->writeDatagram(data, udp_server_ip, udp_server_port);
 
                 QPixmap pix(":/assets/wifi_on.png");
-                ui->label->setPixmap(pix);
+                ui->pushButton_udp_connect->setIcon(pix);
             } else {
                 qDebug() << "Failed to bind UDP socket.";
-                QPixmap pix(":/assets/wifi_off.png");
-                ui->label->setPixmap(pix);
+                QPixmap pix(":/assets/router.png");
+                ui->pushButton_udp_connect->setIcon(pix);
                 ui->pushButton_udp_connect->setChecked(false);
             }
         } else {
+            // Disconnect UDP
             QByteArray data = "Bye from Qt";
-            udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
+            udp_socket->writeDatagram(data, udp_server_ip, udp_server_port);
 
-            // Disable UDP connection when the button is toggled off
             disconnect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
-            udp_socket->close(); // unbinds socket
+            udp_socket->close();
             qDebug() << "UDP Disabled.";
-            QPixmap pix(":/assets/wifi_off.png");
-            ui->label->setPixmap(pix);
+            QPixmap pix(":/assets/router.png");
+            ui->pushButton_udp_connect->setIcon(pix);
         }
-    } else {
-        qDebug() << "Invalid IP or port.";
-        QPixmap pix(":/assets/wifi_off.png");
-        ui->label->setPixmap(pix);
-        ui->pushButton_udp_connect->setChecked(false);
-    }
+    });
 }
 
 void MainWindow::on_pushButton_em_gain_clicked()
@@ -624,7 +657,9 @@ void MainWindow::on_pushButton_browse_clicked()
 
     if (!fileName.isEmpty()) {
         hexFilePath = fileName;
-        qDebug() << "Selected HEX file:" << hexFilePath;
+        QMessageBox::information(this,
+                                 tr("File Selected"),
+                                 tr("HEX file loaded successfully:\n%1").arg(fileName));
     }
 }
 
@@ -635,17 +670,21 @@ void MainWindow::on_pushButton_flash_clicked()
         return;
     }
 
-    QString password = "tamarix"; // ❗ Hardcoded password for testing ONLY
-    QString pscpPath = "pscp";    // Make sure pscp.exe is in PATH or use full path
+    // Extract username from UDP IP (e.g., "tamariw.local" -> "tamariw")
+    QString hostname = ui->textEdit_udp_ip->toPlainText().trimmed();
+    QString username = hostname.split('@').first().split('.').first();
+    if (username.isEmpty()) {
+        username = "tamariw"; // Default fallback
+    }
 
-    QString user = "tamarix";
-    QString host = "tamarix.local";
-    QString remotePath = "/home/tamarix/";
+    QString password = username; // Password matches username
+    QString pscpPath = "pscp";
+    QString remotePath = QString("/home/%1/").arg(username);
 
     QStringList arguments;
     arguments << "-pw" << password
               << hexFilePath
-              << QString("%1@%2:%3").arg(user, host, remotePath);
+              << QString("%1@%2:%3").arg(username, hostname, remotePath);
 
     QProcess *pscp = new QProcess(this);
     pscp->setProcessChannelMode(QProcess::MergedChannels);
@@ -656,18 +695,36 @@ void MainWindow::on_pushButton_flash_clicked()
                 qDebug() << "PSCP Output:\n" << output;
 
                 if (exitCode == 0 && status == QProcess::NormalExit) {
-                    QMessageBox::information(this, "Success", "HEX file uploaded successfully!");
+                    QMessageBox::information(this, "Success",
+                        QString("HEX file uploaded successfully to %1!\n\n"
+                               "Username: %2\n"
+                               "Remote Path: %3")
+                        .arg(hostname)
+                        .arg(username)
+                        .arg(remotePath));
                 } else {
                     QMessageBox::critical(this, "Error",
-                                          QString("Upload failed (code %1)\n\n%2").arg(exitCode).arg(output));
+                        QString("Upload failed (code %1)\n\n"
+                               "Target: %2@%3:%4\n\n"
+                               "Error Output:\n%5")
+                        .arg(exitCode)
+                        .arg(username)
+                        .arg(hostname)
+                        .arg(remotePath)
+                        .arg(output));
                 }
                 pscp->deleteLater();
             });
 
+    qDebug() << "Starting flash process with arguments:" << arguments;
     pscp->start(pscpPath, arguments);
 
     if (!pscp->waitForStarted(3000)) {
-        QMessageBox::critical(this, "Error", "Failed to start PSCP process.");
+        QMessageBox::critical(this, "Error",
+            QString("Failed to start PSCP process for %1@%2\n\nError: %3")
+            .arg(username)
+            .arg(hostname)
+            .arg(pscp->errorString()));
         qDebug() << "Failed to start PSCP process:" << pscp->errorString();
         pscp->deleteLater();
     }
@@ -675,7 +732,30 @@ void MainWindow::on_pushButton_flash_clicked()
 
 void MainWindow::on_pushButton_flash_2_clicked()
 {
-    QByteArray data = "Flash Flash";
-    udp_socket->writeDatagram(data, QHostAddress(udp_server_ip), udp_server_port);
-}
+    // Check if UDP connection is active
+    if (udp_socket->state() != QAbstractSocket::BoundState) {
+        QMessageBox::critical(this, "Error",
+                              "Cannot send flash command - UDP connection not established!");
+        return;
+    }
 
+    QByteArray data = "Flash Flash";
+    qint64 bytesSent = udp_socket->writeDatagram(data, udp_server_ip, udp_server_port);
+
+    if (bytesSent == -1) {
+        QMessageBox::critical(this, "Error",
+                              QString("Failed to send flash command!\n\n"
+                                      "Error: %1\n"
+                                      "Target: %2:%3")
+                                  .arg(udp_socket->errorString())
+                                  .arg(udp_server_ip.toString())
+                                  .arg(udp_server_port));
+    } else {
+        QMessageBox::information(this, "Success",
+                                 QString("Flash command sent successfully!\n\n"
+                                         "Sent %1 bytes to %2:%3")
+                                     .arg(bytesSent)
+                                     .arg(udp_server_ip.toString())
+                                     .arg(udp_server_port));
+    }
+}
