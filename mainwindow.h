@@ -41,6 +41,9 @@ typedef enum
     TCMD_EM3_STOP,
     TCMD_EM_ENABLE,
     TCMD_EM_STOP_ALL,
+    TCMD_KF_Q00,
+    TCMD_KF_Q11,
+    TCMD_KF_R,
 
     // Do not remove!
     TCMD_LENGTH
@@ -88,6 +91,8 @@ private slots:
     void on_pushButton_flash_clicked();
 
     void on_pushButton_flash_2_clicked();
+
+    void on_pushButton_em_gain_2_clicked();
 
 private:
     void populate_telemetry(const telemetry_t &t);

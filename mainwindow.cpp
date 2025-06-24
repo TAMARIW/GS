@@ -41,6 +41,15 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
     QString payload = rx.mid(1, rx.length() - 1);
     const QStringList components = payload.split(',');
 
+    // Initialize all values to 0 first
+    for (int i = 0; i < 4; ++i) {
+        t.d[i] = 0.0f;
+        t.c[i] = 0.0f;
+        t.kf_d[i] = 0.0f;
+        t.kf_v[i] = 0.0f;
+    }
+    t.crc = 0;
+
     // Iterate over each comma separated components
     for (const QString &component : components)
     {
@@ -48,7 +57,7 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
         QStringList parts = component.split(':');
         if (parts.size() != 2)
         {
-            //qDebug() << "Invalid component:" << component;
+            qDebug() << "Invalid component:" << component;
             return false;
         }
 
@@ -57,32 +66,34 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
 
         if (type == "d") // Distance
         {
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < qMin(4, values.size()); ++i)  // Use qMin to prevent overflow
             {
                 t.d[i] = values[i].toFloat();
             }
         }
         else if (type == "c") // current
         {
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < qMin(4, values.size()); ++i) {
                 t.c[i] = values[i].toFloat();
             }
         }
         else if (type == "e") // KF distance
         {
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < qMin(4, values.size()); ++i) {
                 t.kf_d[i] = values[i].toFloat();
             }
         }
         else if (type == "f") // KF velocity
         {
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < qMin(4, values.size()); ++i) {
                 t.kf_v[i] = values[i].toFloat();
             }
         }
         else if (type == "r") // CRC
         {
-            t.crc = values[0].toUInt();
+            if (!values.isEmpty()) {
+                t.crc = values[0].toUInt();
+            }
         }
         else
         {
@@ -679,7 +690,7 @@ void MainWindow::on_pushButton_flash_clicked()
 
     QString password = username; // Password matches username
     QString pscpPath = "pscp";
-    QString remotePath = QString("/home/%1/").arg(username);
+    QString remotePath = QString("/home/%1/tpi/src").arg(username);
 
     QStringList arguments;
     arguments << "-pw" << password
@@ -759,3 +770,11 @@ void MainWindow::on_pushButton_flash_2_clicked()
                                      .arg(udp_server_port));
     }
 }
+
+void MainWindow::on_pushButton_em_gain_2_clicked()
+{
+    sendMessage(TCMD_KF_Q00, ui->textEdit_kf_q00->toPlainText().toDouble());
+    sendMessage(TCMD_KF_Q11, ui->textEdit_kf_q11->toPlainText().toDouble());
+    sendMessage(TCMD_KF_R, ui->textEdit_kf_r->toPlainText().toDouble());
+}
+
