@@ -30,7 +30,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -1804,7 +1804,7 @@ QPushButton:hover {
      <x>0</x>
      <y>0</y>
      <width>1970</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

@@ -4,6 +4,9 @@
 
 #define PID_CURRENT_KP 0.065
 #define PID_CURRENT_KI 0.3
+#define KF1D_Q_POS 0.1f
+#define KF1D_Q_VEL 0.1f
+#define KF1D_R 1.0f
 
 #include <QFileDialog>
 #include <QString>
@@ -289,6 +292,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QTimer::singleShot(0, this, [this]() {
+        ui->tabWidget_2->setCurrentWidget(ui->tab_connection);
+    });
+
     ui->textEdit_em0->setText(QString::number(1000));
     ui->textEdit_em1->setText(QString::number(1000));
     ui->textEdit_em2->setText(QString::number(1000));
@@ -299,6 +306,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em_fs->setText(QString::number(0.0));
     ui->textEdit_udp_ip->setText("tamariw.local");
     ui->textEdit_udp_port->setText("8080");
+
+    ui->textEdit_kf_q00->setText(QString::number(KF1D_Q_POS));
+    ui->textEdit_kf_q11->setText(QString::number(KF1D_Q_VEL));
+    ui->textEdit_kf_r->setText(QString::number(KF1D_R));
 
     qDebug() << "Hello World\n",
     em_init_plot(ui->widget_em_plot);
@@ -693,7 +704,8 @@ void MainWindow::on_pushButton_flash_clicked()
     QString remotePath = QString("/home/%1/tpi/src").arg(username);
 
     QStringList arguments;
-    arguments << "-pw" << password
+    arguments << "-batch" // Automatically accept host key (bypass prompt)
+              << "-pw" << password
               << hexFilePath
               << QString("%1@%2:%3").arg(username, hostname, remotePath);
 
@@ -707,22 +719,22 @@ void MainWindow::on_pushButton_flash_clicked()
 
                 if (exitCode == 0 && status == QProcess::NormalExit) {
                     QMessageBox::information(this, "Success",
-                        QString("HEX file uploaded successfully to %1!\n\n"
-                               "Username: %2\n"
-                               "Remote Path: %3")
-                        .arg(hostname)
-                        .arg(username)
-                        .arg(remotePath));
+                                             QString("HEX file uploaded successfully to %1!\n\n"
+                                                     "Username: %2\n"
+                                                     "Remote Path: %3")
+                                                 .arg(hostname)
+                                                 .arg(username)
+                                                 .arg(remotePath));
                 } else {
                     QMessageBox::critical(this, "Error",
-                        QString("Upload failed (code %1)\n\n"
-                               "Target: %2@%3:%4\n\n"
-                               "Error Output:\n%5")
-                        .arg(exitCode)
-                        .arg(username)
-                        .arg(hostname)
-                        .arg(remotePath)
-                        .arg(output));
+                                          QString("Upload failed (code %1)\n\n"
+                                                  "Target: %2@%3:%4\n\n"
+                                                  "Error Output:\n%5")
+                                              .arg(exitCode)
+                                              .arg(username)
+                                              .arg(hostname)
+                                              .arg(remotePath)
+                                              .arg(output));
                 }
                 pscp->deleteLater();
             });
@@ -732,49 +744,72 @@ void MainWindow::on_pushButton_flash_clicked()
 
     if (!pscp->waitForStarted(3000)) {
         QMessageBox::critical(this, "Error",
-            QString("Failed to start PSCP process for %1@%2\n\nError: %3")
-            .arg(username)
-            .arg(hostname)
-            .arg(pscp->errorString()));
+                              QString("Failed to start PSCP process for %1@%2\n\nError: %3")
+                                  .arg(username)
+                                  .arg(hostname)
+                                  .arg(pscp->errorString()));
         qDebug() << "Failed to start PSCP process:" << pscp->errorString();
         pscp->deleteLater();
     }
 }
-
 void MainWindow::on_pushButton_flash_2_clicked()
 {
-    // Check if UDP connection is active
-    if (udp_socket->state() != QAbstractSocket::BoundState) {
+    // Extract connection details
+    QString target = ui->textEdit_udp_ip->toPlainText().trimmed();
+    QString username = target.contains('@') ? target.split('@').first() : "tamariw";
+    QString hostname = target.split('@').last().replace(".local", "");
+    QString password = username; // Password = username
+
+    // ===== 1. Prepare Plink command =====
+    QString plinkPath = "plink.exe"; // Ensure plink is in PATH or specify full path
+    QString hexPath = QString("/home/%1/tpi/src/main.hex").arg(username);
+    QString cfgPath = QString("/home/%1/tpi/src/openocd.cfg").arg(username);
+
+    QString openocdCommand = QString(
+                                 "sudo /usr/bin/openocd "
+                                 "-f %1 "
+                                 "-c \"program %2 verify reset exit\""
+                                 ).arg(cfgPath).arg(hexPath);
+    // ===== 2. Execute command =====
+    QProcess plinkProcess;
+    QStringList arguments;
+    arguments << "-ssh" << "-batch" << "-pw" << password
+              << QString("%1@%2").arg(username).arg(hostname)
+              << openocdCommand;
+
+    plinkProcess.start(plinkPath, arguments);
+
+    // Show progress dialog
+    QProgressDialog progress("Flashing STM32 via SSH...", QString(), 0, 0, this);
+    progress.setCancelButton(nullptr);
+    progress.show();
+    QApplication::processEvents();
+
+    // Wait with timeout (60 seconds for flashing)
+    if (!plinkProcess.waitForFinished(60000)) {
+        progress.close();
         QMessageBox::critical(this, "Error",
-                              "Cannot send flash command - UDP connection not established!");
+                              QString("Flashing timed out!\n\nTarget: %1@%2").arg(username).arg(hostname));
         return;
     }
+    progress.close();
 
-    QByteArray data = "Flash Flash";
-    qint64 bytesSent = udp_socket->writeDatagram(data, udp_server_ip, udp_server_port);
-
-    if (bytesSent == -1) {
-        QMessageBox::critical(this, "Error",
-                              QString("Failed to send flash command!\n\n"
-                                      "Error: %1\n"
-                                      "Target: %2:%3")
-                                  .arg(udp_socket->errorString())
-                                  .arg(udp_server_ip.toString())
-                                  .arg(udp_server_port));
-    } else {
+    // ===== 3. Check results =====
+    if (plinkProcess.exitCode() == 0) {
         QMessageBox::information(this, "Success",
-                                 QString("Flash command sent successfully!\n\n"
-                                         "Sent %1 bytes to %2:%3")
-                                     .arg(bytesSent)
-                                     .arg(udp_server_ip.toString())
-                                     .arg(udp_server_port));
+                                 QString("STM32 flashed successfully!\n\nUser: %1\nHost: %2").arg(username).arg(hostname));
+    } else {
+        QMessageBox::critical(this, "Error",
+                              QString("Flashing failed!\n\nExit Code: %1\nError Output:\n%2")
+                                  .arg(plinkProcess.exitCode())
+                                  .arg(plinkProcess.readAllStandardError()));
     }
 }
-
 void MainWindow::on_pushButton_em_gain_2_clicked()
 {
     sendMessage(TCMD_KF_Q00, ui->textEdit_kf_q00->toPlainText().toDouble());
     sendMessage(TCMD_KF_Q11, ui->textEdit_kf_q11->toPlainText().toDouble());
     sendMessage(TCMD_KF_R, ui->textEdit_kf_r->toPlainText().toDouble());
-}
 
+    ui->tabWidget_2->setCurrentWidget(ui->tab);
+}
