@@ -756,9 +756,9 @@ void MainWindow::on_pushButton_flash_2_clicked()
 {
     // Extract connection details
     QString target = ui->textEdit_udp_ip->toPlainText().trimmed();
-    QString username = target.contains('@') ? target.split('@').first() : "tamariw";
     QString hostname = target.split('@').last().replace(".local", "");
-    QString password = username; // Password = username
+    QString password = hostname;
+    QString username = hostname;
 
     // ===== 1. Prepare Plink command =====
     QString plinkPath = "plink.exe"; // Ensure plink is in PATH or specify full path
@@ -766,7 +766,7 @@ void MainWindow::on_pushButton_flash_2_clicked()
     QString cfgPath = QString("/home/%1/tpi/src/openocd.cfg").arg(username);
 
     QString openocdCommand = QString(
-                                 "sudo /usr/bin/openocd "
+                                 "sudo /usr/local/bin/openocd "
                                  "-f %1 "
                                  "-c \"program %2 verify reset exit\""
                                  ).arg(cfgPath).arg(hexPath);
@@ -774,8 +774,10 @@ void MainWindow::on_pushButton_flash_2_clicked()
     QProcess plinkProcess;
     QStringList arguments;
     arguments << "-ssh" << "-batch" << "-pw" << password
-              << QString("%1@%2").arg(username).arg(hostname)
+              << QString("%1@%2.local").arg(username).arg(hostname)
               << openocdCommand;
+
+    qDebug() << arguments;
 
     plinkProcess.start(plinkPath, arguments);
 
