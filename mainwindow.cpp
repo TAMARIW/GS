@@ -829,7 +829,6 @@ void MainWindow::on_pushButton_em_wave_clicked()
             connect(waveTimer, &QTimer::timeout, [this]()
                     {
                         static bool positive_phase = true;
-
                         if (positive_phase)
                         {
                             sendMessage(TCMD_EM0, ui->textEdit_em_wave->toPlainText().toDouble());
@@ -857,9 +856,12 @@ void MainWindow::on_pushButton_em_wave_clicked()
         }
 
         waveTimer->start(1000);
+        ui->label_em_wave->setText("ON");
     } else
     {
         is_wave_active = false;
+        ui->label_em_wave->setText("OFF");
+
 
         if (waveTimer)
         {
