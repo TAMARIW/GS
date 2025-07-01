@@ -766,7 +766,7 @@ void MainWindow::on_pushButton_flash_2_clicked()
     QString cfgPath = QString("/home/%1/tpi/src/openocd.cfg").arg(username);
 
     QString openocdCommand = QString(
-                                 "sudo /usr/local/bin/openocd "
+                                 "sudo openocd "
                                  "-f %1 "
                                  "-c \"program %2 verify reset exit\""
                                  ).arg(cfgPath).arg(hexPath);
