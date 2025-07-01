@@ -302,10 +302,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em3->setText(QString::number(1000));
     ui->textEdit_em_kp->setText(QString::number(PID_CURRENT_KP));
     ui->textEdit_em_ki->setText(QString::number(PID_CURRENT_KI));
-    ui->textEdit_em_fc->setText(QString::number(0.0));
-    ui->textEdit_em_fs->setText(QString::number(0.0));
     ui->textEdit_udp_ip->setText("tamariw.local");
     ui->textEdit_udp_port->setText("8080");
+    ui->textEdit_em_wave->setText("1000");
 
     ui->textEdit_kf_q00->setText(QString::number(KF1D_Q_POS));
     ui->textEdit_kf_q11->setText(QString::number(KF1D_Q_VEL));
@@ -814,4 +813,66 @@ void MainWindow::on_pushButton_em_gain_2_clicked()
     sendMessage(TCMD_KF_R, ui->textEdit_kf_r->toPlainText().toDouble());
 
     ui->tabWidget_2->setCurrentWidget(ui->tab);
+}
+
+void MainWindow::on_pushButton_em_wave_clicked()
+{
+    static bool is_wave_active = false;
+    static QTimer* waveTimer = nullptr;
+
+    if (!is_wave_active) {
+        // Start the wave
+        is_wave_active = true;
+
+        if (!waveTimer) {
+            waveTimer = new QTimer(this);
+            connect(waveTimer, &QTimer::timeout, [this]()
+                    {
+                        static bool positive_phase = true;
+
+                        if (positive_phase)
+                        {
+                            sendMessage(TCMD_EM0, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM0, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM1, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM1, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM2, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM2, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM3, ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM3, ui->textEdit_em_wave->toPlainText().toDouble());
+                        } else
+                        {
+                            sendMessage(TCMD_EM0, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM0, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM1, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM1, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM2, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM2, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM3, -ui->textEdit_em_wave->toPlainText().toDouble());
+                            sendMessage(TCMD_EM3, -ui->textEdit_em_wave->toPlainText().toDouble());
+                        }
+
+                        positive_phase = !positive_phase;
+                    });
+        }
+
+        waveTimer->start(1000);
+    } else
+    {
+        is_wave_active = false;
+
+        if (waveTimer)
+        {
+            waveTimer->stop();
+        }
+
+        sendMessage(TCMD_EM0_STOP, 0.0);
+        sendMessage(TCMD_EM1_STOP, 0.0);
+        sendMessage(TCMD_EM2_STOP, 0.0);
+        sendMessage(TCMD_EM3_STOP, 0.0);
+        sendMessage(TCMD_EM0_STOP, 0.0);
+        sendMessage(TCMD_EM1_STOP, 0.0);
+        sendMessage(TCMD_EM2_STOP, 0.0);
+        sendMessage(TCMD_EM3_STOP, 0.0);
+    }
 }

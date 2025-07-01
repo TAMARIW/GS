@@ -94,6 +94,8 @@ private slots:
 
     void on_pushButton_em_gain_2_clicked();
 
+    void on_pushButton_em_wave_clicked();
+
 private:
     void populate_telemetry(const telemetry_t &t);
 

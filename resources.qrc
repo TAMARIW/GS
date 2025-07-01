@@ -14,5 +14,6 @@
         <file>assets/memory_200dp_666666_FILL0_wght400_GRAD0_opsz48.png</file>
         <file>assets/toggle_standby.png</file>
         <file>assets/em_standby.png</file>
+        <file>assets/wave.png</file>
     </qresource>
 </RCC>
