@@ -14,5 +14,9 @@
         <file>assets/memory_200dp_666666_FILL0_wght400_GRAD0_opsz48.png</file>
         <file>assets/toggle_standby.png</file>
         <file>assets/em_standby.png</file>
+        <file>assets/dock.png</file>
+        <file>assets/latch.png</file>
+        <file>assets/unlatch.png</file>
+        <file>assets/docking.png</file>
     </qresource>
 </RCC>

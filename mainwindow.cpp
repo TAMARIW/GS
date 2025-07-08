@@ -60,7 +60,7 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
         QStringList parts = component.split(':');
         if (parts.size() != 2)
         {
-            qDebug() << "Invalid component:" << component;
+            // qDebug() << "Invalid component:" << component;
             return false;
         }
 
@@ -100,7 +100,7 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
         }
         else
         {
-            qDebug() << "Unknown data type:" << type;
+             // qDebug() << "Unknown data type:" << type;
             return false;
         }
     }
@@ -293,8 +293,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     QTimer::singleShot(0, this, [this]() {
-        ui->tabWidget_2->setCurrentWidget(ui->tab_connection);
+        ui->tabWidget->setCurrentWidget(ui->tab_connection);
     });
+
+    ui->textEdit_latch_current->setText(QString::number(1000));
+    ui->textEdit_dock_sp->setText(QString::number(20));
+    ui->textEdit_dock_kp->setText(QString::number(0.0));
+    ui->textEdit_dock_ki->setText(QString::number(0.0));
+    ui->textEdit_dock_kd->setText(QString::number(0.0));
 
     ui->textEdit_em0->setText(QString::number(1000));
     ui->textEdit_em1->setText(QString::number(1000));
@@ -432,6 +438,7 @@ void MainWindow::sendMessage(tcmd_idx_t idx, double data)
     qDebug() << message;
     QByteArray byteData = message.toUtf8();
     udp_socket->writeDatagram(byteData, udp_server_ip, udp_server_port);
+    QThread::msleep(200);
 }
 
 void MainWindow::receiveMessage()
@@ -813,5 +820,43 @@ void MainWindow::on_pushButton_em_gain_2_clicked()
     sendMessage(TCMD_KF_Q11, ui->textEdit_kf_q11->toPlainText().toDouble());
     sendMessage(TCMD_KF_R, ui->textEdit_kf_r->toPlainText().toDouble());
 
-    ui->tabWidget_2->setCurrentWidget(ui->tab);
+    ui->tabWidget->setCurrentWidget(ui->tab_kf_pos);
 }
+
+void MainWindow::on_pushButton_dock_clicked()
+{
+    static bool checked = true;
+
+    if (checked)
+    {
+        ui->tabWidget->setCurrentWidget(ui->tab_coils);
+        ui->pushButton_dock->setIcon(QIcon(":/assets/docking.png"));
+        sendMessage(TCMD_START_DOCK, 1.0);
+    }
+    else
+    {
+        ui->pushButton_dock->setIcon(QIcon(":/assets/dock.png"));
+        sendMessage(TCMD_START_DOCK, 0.0);
+    }
+
+    checked = !checked;
+}
+
+void MainWindow::on_pushButton_latch_clicked()
+{
+    static bool checked = true;
+
+    if (checked)
+    {
+        ui->pushButton_latch->setIcon(QIcon(":/assets/latch.png"));
+        sendMessage(TCMD_LATCH, 1.0);
+    }
+    else
+    {
+        ui->pushButton_latch->setIcon(QIcon(":/assets/unlatch.png"));
+        sendMessage(TCMD_LATCH, 0.0);
+    }
+
+    checked = !checked;
+}
+

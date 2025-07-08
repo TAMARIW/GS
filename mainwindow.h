@@ -28,7 +28,6 @@ typedef enum
 
 typedef enum
 {
-    // PID gains
     TCMD_EM_KP,
     TCMD_EM_KI,
     TCMD_EM0,
@@ -44,6 +43,9 @@ typedef enum
     TCMD_KF_Q00,
     TCMD_KF_Q11,
     TCMD_KF_R,
+    TCMD_START_DOCK,
+    TCMD_LATCH,
+    TCMD_LATCH_CURRENT,
 
     // Do not remove!
     TCMD_LENGTH
@@ -93,6 +95,10 @@ private slots:
     void on_pushButton_flash_2_clicked();
 
     void on_pushButton_em_gain_2_clicked();
+
+    void on_pushButton_dock_clicked();
+
+    void on_pushButton_latch_clicked();
 
 private:
     void populate_telemetry(const telemetry_t &t);
