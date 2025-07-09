@@ -26,7 +26,8 @@ typedef enum
     EM_STANDBY
 } em_state_t;
 
-typedef enum
+// Add/remove new7obsolete telecommands as enum elements
+enum tcmd_idx_t
 {
     TCMD_EM_KP,
     TCMD_EM_KI,
@@ -47,9 +48,15 @@ typedef enum
     TCMD_LATCH,
     TCMD_LATCH_CURRENT,
 
-    // Do not remove!
+    TCMD_DOCK_STATE_IDLE,
+    TCMD_DOCK_STATE_CAPTURE,
+    TCMD_DOCK_STATE_CONTROL,
+    TCMD_DOCK_STATE_LATCH,
+    TCMD_DOCK_STATE_UNLATCH,
+    TCMD_DOCK_STATE_ABORT,
+
     TCMD_LENGTH
-} tcmd_idx_t;
+};
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -98,7 +105,17 @@ private slots:
 
     void on_pushButton_dock_clicked();
 
-    void on_pushButton_latch_clicked();
+    void on_pushButton_dock_state_idle_clicked();
+
+    void on_pushButton_dock_state_capture_clicked();
+
+    void on_pushButton_dock_state_control_clicked();
+
+    void on_pushButton_dock_state_latch_clicked();
+
+    void on_pushButton_dock_state_unlatch_clicked();
+
+    void on_pushButton_state_abort_clicked();
 
 private:
     void populate_telemetry(const telemetry_t &t);

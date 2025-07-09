@@ -13,6 +13,7 @@ qt_add_executable(dock-gs
     mainwindow.ui
     resources.qrc
     qcustomplot.cpp qcustomplot.h
+    sat_config.h
 )
 
 qt_add_resources(RESOURCE_FILES resources.qrc)

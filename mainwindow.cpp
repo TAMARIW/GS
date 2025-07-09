@@ -1,12 +1,7 @@
+#include "sat_config.h"
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "qcustomplot.h"
-
-#define PID_CURRENT_KP 0.065
-#define PID_CURRENT_KI 0.3
-#define KF1D_Q_POS 0.1f
-#define KF1D_Q_VEL 0.1f
-#define KF1D_R 1.0f
+#include "ui_mainwindow.h"
 
 #include <QFileDialog>
 #include <QString>
@@ -296,18 +291,21 @@ MainWindow::MainWindow(QWidget *parent)
         ui->tabWidget->setCurrentWidget(ui->tab_connection);
     });
 
-    ui->textEdit_latch_current->setText(QString::number(1000));
-    ui->textEdit_dock_sp->setText(QString::number(20));
-    ui->textEdit_dock_kp->setText(QString::number(0.0));
-    ui->textEdit_dock_ki->setText(QString::number(0.0));
-    ui->textEdit_dock_kd->setText(QString::number(0.0));
+    ui->textEdit_unlatch_current->setText(QString::number(DOCK_UNLATCH_CURRENT_mA));
+    ui->textEdit_latch_current->setText(QString::number(DOCK_LATCH_CURRENT_mA));
+    ui->textEdit_dock_dist_sp->setText(QString::number(DOCK_CONTROL_DISTANCE_SP_MM));
+    ui->textEdit_dock_vel_sp->setText(QString::number(DOCK_CONTROL_VELOCITY_SP));
+    ui->textEdit_dock_kp->setText(QString::number(DOCK_CONTROLLER_GAIN_KP));
+    ui->textEdit_dock_ki->setText(QString::number(DOCK_CONTROLLER_GAIN_KI));
+    ui->textEdit_dock_kd->setText(QString::number(DOCK_CONTROLLER_GAIN_KD));
+    ui->textEdit_dock_kf->setText(QString::number(DOCK_CONTROLLER_GAIN_KF));
 
     ui->textEdit_em0->setText(QString::number(1000));
     ui->textEdit_em1->setText(QString::number(1000));
     ui->textEdit_em2->setText(QString::number(1000));
     ui->textEdit_em3->setText(QString::number(1000));
-    ui->textEdit_em_kp->setText(QString::number(PID_CURRENT_KP));
-    ui->textEdit_em_ki->setText(QString::number(PID_CURRENT_KI));
+    ui->textEdit_em_kp->setText(QString::number(PID_COIL_KP));
+    ui->textEdit_em_ki->setText(QString::number(PID_COIL_KI));
     ui->textEdit_em_fc->setText(QString::number(0.0));
     ui->textEdit_em_fs->setText(QString::number(0.0));
     ui->textEdit_udp_ip->setText("tamariw.local");
@@ -829,7 +827,6 @@ void MainWindow::on_pushButton_dock_clicked()
 
     if (checked)
     {
-        ui->tabWidget->setCurrentWidget(ui->tab_coils);
         ui->pushButton_dock->setIcon(QIcon(":/assets/docking.png"));
         sendMessage(TCMD_START_DOCK, 1.0);
     }
@@ -842,21 +839,36 @@ void MainWindow::on_pushButton_dock_clicked()
     checked = !checked;
 }
 
-void MainWindow::on_pushButton_latch_clicked()
+
+void MainWindow::on_pushButton_dock_state_idle_clicked()
 {
-    static bool checked = true;
-
-    if (checked)
-    {
-        ui->pushButton_latch->setIcon(QIcon(":/assets/latch.png"));
-        sendMessage(TCMD_LATCH, 1.0);
-    }
-    else
-    {
-        ui->pushButton_latch->setIcon(QIcon(":/assets/unlatch.png"));
-        sendMessage(TCMD_LATCH, 0.0);
-    }
-
-    checked = !checked;
+    sendMessage(TCMD_DOCK_STATE_IDLE, 0.0);
 }
 
+
+void MainWindow::on_pushButton_dock_state_capture_clicked()
+{
+    sendMessage(TCMD_DOCK_STATE_CAPTURE, 0.0);
+}
+
+
+void MainWindow::on_pushButton_dock_state_control_clicked()
+{
+    sendMessage(TCMD_DOCK_STATE_CONTROL, 0.0);
+}
+
+
+void MainWindow::on_pushButton_dock_state_latch_clicked()
+{
+    sendMessage(TCMD_DOCK_STATE_LATCH, 0.0);
+}
+
+void MainWindow::on_pushButton_dock_state_unlatch_clicked()
+{
+    sendMessage(TCMD_DOCK_STATE_UNLATCH, 0.0);
+}
+
+void MainWindow::on_pushButton_state_abort_clicked()
+{
+    sendMessage(TCMD_DOCK_STATE_ABORT, 0.0);
+}
