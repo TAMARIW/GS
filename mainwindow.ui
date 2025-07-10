@@ -36,7 +36,7 @@
      </size>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -68,7 +68,7 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>150</y>
+         <y>170</y>
          <width>91</width>
          <height>31</height>
         </rect>
@@ -81,7 +81,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>110</y>
+         <y>80</y>
          <width>241</width>
          <height>20</height>
         </rect>
@@ -110,7 +110,7 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>100</y>
+         <y>70</y>
          <width>211</width>
          <height>31</height>
         </rect>
@@ -122,9 +122,9 @@
       <widget class="QLabel" name="label_em0_12">
        <property name="geometry">
         <rect>
-         <x>80</x>
-         <y>160</y>
-         <width>201</width>
+         <x>40</x>
+         <y>180</y>
+         <width>241</width>
          <height>20</height>
         </rect>
        </property>
@@ -142,7 +142,7 @@
         </font>
        </property>
        <property name="text">
-        <string>RPi PORT:</string>
+        <string>RPi SERVER PORT:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -189,6 +189,48 @@ QPushButton:hover {
        </property>
        <property name="checkable">
         <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_em0_29">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>130</y>
+         <width>241</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <family>Courier New</family>
+         <pointsize>15</pointsize>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>UNIQUE LOCAL PORT:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QTextEdit" name="textEdit_udp_port_local">
+       <property name="geometry">
+        <rect>
+         <x>300</x>
+         <y>120</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
        </property>
       </widget>
      </widget>
@@ -2453,7 +2495,7 @@ QPushButton:hover {
             <rect>
              <x>40</x>
              <y>50</y>
-             <width>281</width>
+             <width>371</width>
              <height>130</height>
             </rect>
            </property>
@@ -4045,7 +4087,7 @@ QPushButton:hover {
      <x>0</x>
      <y>0</y>
      <width>1970</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

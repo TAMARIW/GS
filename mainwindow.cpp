@@ -383,6 +383,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textEdit_em_fs->setText(QString::number(0.0));
     ui->textEdit_udp_ip->setText("tamariw.local");
     ui->textEdit_udp_port->setText("8080");
+    ui->textEdit_udp_port_local->setText("8081");
 
     ui->textEdit_kf_q00->setText(QString::number(KF1D_Q_POS));
     ui->textEdit_kf_q11->setText(QString::number(KF1D_Q_VEL));
@@ -676,8 +677,12 @@ void MainWindow::on_pushButton_udp_connect_toggled(bool checked)
         qDebug() << "Resolved server:" << ip_str << "->" << udp_server_ip.toString() << ":" << udp_server_port;
 
         if (checked) {
+            QString portText = ui->textEdit_udp_port_local->toPlainText().trimmed();
+            bool ok;
+            quint16 local_port = portText.toUShort(&ok);
+
             // Start UDP connection
-            if (udp_socket->bind(QHostAddress::AnyIPv4, 8081)) {
+            if (udp_socket->bind(QHostAddress::AnyIPv4,  local_port)) {
                 connect(udp_socket, &QUdpSocket::readyRead, this, &MainWindow::receiveMessage);
                 qDebug() << "UDP Enabled. Receiving from:" << udp_socket->localAddress().toString() << udp_socket->localPort();
 
