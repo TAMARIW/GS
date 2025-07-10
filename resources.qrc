@@ -18,5 +18,6 @@
         <file>assets/latch.png</file>
         <file>assets/unlatch.png</file>
         <file>assets/docking.png</file>
+        <file>assets/plot.png</file>
     </qresource>
 </RCC>

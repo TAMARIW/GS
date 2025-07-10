@@ -10,12 +10,27 @@
 #include <QFile>
 #include <QUrl>
 
+// Satellite docking states.
+// Please make sure it is identical to the one on embedded firmware.
+enum dock_state
+{
+    DOCK_STATE_START,   // Indicates the start of docking sequence (received from third party)
+    DOCK_STATE_IDLE,    // Do nothing at all
+    DOCK_STATE_CAPTURE, // Passive coil actuation to bring satellites together
+    DOCK_STATE_CONTROL, // Soft docking control with position and velocity feedback
+    DOCK_STATE_LATCH,   // Extra push to overcome latch friction
+    DOCK_STATE_UNLATCH, // Repel latched satellites
+    DOCK_STATE_ABORT    // Abort the docking sequence under unsafe conditions
+};
+
 typedef struct
 {
-    float d[4]; // ToF measurements [mm]
-    float c[4]; // Electromagnet current feedback [mA]
+    float d[4];    // ToF measurements [mm]
+    float c[4];    // Electromagnet current feedback [mA]
+    float dt[5];    // Thread periods [ms]
     float kf_d[4]; // Kalman Filter distance estimates
     float kf_v[4]; // Kalman Filter velocity estimates
+    enum dock_state state; // Current docking state
     uint16_t crc;
 } telemetry_t;
 
@@ -26,35 +41,52 @@ typedef enum
     EM_STANDBY
 } em_state_t;
 
-// Add/remove new7obsolete telecommands as enum elements
-enum tcmd_idx_t
+// Add/remove new/obsolete telecommands as enum elements.
+// Please make sure it is identical to the one on embedded firmware.
+enum tcmd_idx
 {
+    // Coil PI controller gains
     TCMD_EM_KP,
     TCMD_EM_KI,
+
+    // Coil control set-points
     TCMD_EM0,
     TCMD_EM1,
     TCMD_EM2,
     TCMD_EM3,
+
+    // Coil enable/disable flags
     TCMD_EM0_STOP,
     TCMD_EM1_STOP,
     TCMD_EM2_STOP,
     TCMD_EM3_STOP,
-    TCMD_EM_ENABLE,
     TCMD_EM_STOP_ALL,
+
+    // KF noise covariances
+    TCMD_KF_R,
     TCMD_KF_Q00,
     TCMD_KF_Q11,
-    TCMD_KF_R,
-    TCMD_START_DOCK,
-    TCMD_LATCH,
-    TCMD_LATCH_CURRENT,
 
+    // Docking configurable parameters
+    TCMD_DOCK_KP,
+    TCMD_DOCK_KI,
+    TCMD_DOCK_KD,
+    TCMD_DOCK_KF,
+    TCMD_DOCK_LATCH_CURRENT,
+    TCMD_DOCK_UNLATCH_CURRENT,
+    TCMD_DOCK_VELOCITY_SP,
+    TCMD_DOCK_DISTANCE_SP,
+
+    // Docking states
+    TCMD_DOCK_STATE_START,
     TCMD_DOCK_STATE_IDLE,
+    TCMD_DOCK_STATE_LATCH,
+    TCMD_DOCK_STATE_ABORT,
     TCMD_DOCK_STATE_CAPTURE,
     TCMD_DOCK_STATE_CONTROL,
-    TCMD_DOCK_STATE_LATCH,
     TCMD_DOCK_STATE_UNLATCH,
-    TCMD_DOCK_STATE_ABORT,
 
+    // Number of enumerators
     TCMD_LENGTH
 };
 
@@ -79,7 +111,7 @@ private slots:
 
     void on_pushButton_em2_toggled(bool checked);
 
-    void sendMessage(tcmd_idx_t idx, double data);
+    void sendMessage(enum tcmd_idx idx, double data);
 
     void receiveMessage();
 
@@ -117,6 +149,28 @@ private slots:
 
     void on_pushButton_state_abort_clicked();
 
+    void on_pushButton_send_latch_current_clicked();
+
+    void on_pushButton_send_disp_sp_clicked();
+
+    void on_pushButton_send_vel_sp_clicked();
+
+    void on_pushButton_send_unlatch_current_clicked();
+
+    void on_pushButton_send_dock_kp_clicked();
+
+    void on_pushButton_send_dock_ki_clicked();
+
+    void on_pushButton_send_dock_kd_clicked();
+
+    void on_pushButton_send_dock_kf_clicked();
+
+    void on_pushButton_goto_kf_dist_plot_clicked();
+
+    void on_pushButton_goto_kf_vel_plot_clicked();
+
+    void on_pushButton_goto_current_plot_clicked();
+
 private:
     void populate_telemetry(const telemetry_t &t);
 
@@ -131,7 +185,7 @@ private:
     QHostAddress udp_server_ip;
     quint16 udp_server_port;
     QTimer *timer_plot_mag;
-    QQueue<QPair<tcmd_idx_t, double>> messageQueue;
+    QQueue<QPair<enum tcmd_idx, double>> messageQueue;
     bool isSending = false;
 };
 #endif // MAINWINDOW_H

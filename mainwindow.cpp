@@ -87,6 +87,18 @@ bool parse_telemetry(const QString &rx, telemetry_t &t)
                 t.kf_v[i] = values[i].toFloat();
             }
         }
+        else if (type == "g") // Docking state
+        {
+            if (!values.isEmpty()) {
+                t.state = (dock_state)values[0].toUInt();
+            }
+        }
+        else if (type == "h") // Thread periods
+        {
+            for (int i = 0; i < qMin(5, values.size()); ++i) {
+                t.dt[i] = values[i].toFloat();
+            }
+        }
         else if (type == "r") // CRC
         {
             if (!values.isEmpty()) {
@@ -130,6 +142,67 @@ void MainWindow::populate_telemetry(const telemetry_t &t)
             kf_d[i].removeFirst();
             kf_v[i].removeFirst();
         }
+    }
+
+    QLabel *state_labels[6] = {ui->label_status_idle,
+                              ui->label_status_capture,
+                              ui->label_status_control,
+                              ui->label_status_latch,
+                              ui->label_status_unlatch,
+                              ui->label_status_abort};
+
+    ui->label_dock_info_d0->setText("d0 : " + QString::number(t.kf_d[0]));
+    ui->label_dock_info_d1->setText("d1 : " + QString::number(t.kf_d[1]));
+    ui->label_dock_info_d2->setText("d2 : " + QString::number(t.kf_d[2]));
+    ui->label_dock_info_d3->setText("d3 : " + QString::number(t.kf_d[3]));
+
+    ui->label_dock_info_v0->setText("v0 : " + QString::number(t.kf_v[0]));
+    ui->label_dock_info_v1->setText("v1 : " + QString::number(t.kf_v[1]));
+    ui->label_dock_info_v2->setText("v2 : " + QString::number(t.kf_v[2]));
+    ui->label_dock_info_v3->setText("v3 : " + QString::number(t.kf_v[3]));
+
+    ui->label_dock_info_em0->setText("em0 : " + QString::number(t.c[0]));
+    ui->label_dock_info_em1->setText("em1 : " + QString::number(t.c[1]));
+    ui->label_dock_info_em2->setText("em2 : " + QString::number(t.c[2]));
+    ui->label_dock_info_em3->setText("em3 : " + QString::number(t.c[3]));
+
+    ui->label_dock_info_period_dock->setText("dock : " + QString::number(t.dt[0]) + " / " + QString::number(THREAD_PERIOD_DOCK_MILLIS));
+    ui->label_dock_info_period_coil->setText("coil : " + QString::number(t.dt[1]) + " / " + QString::number(THREAD_PERIOD_COIL_MILLIS));
+    ui->label_dock_info_period_tcmd->setText("telem : " + QString::number(t.dt[2]) + " / " + QString::number(THREAD_PERIOD_TELEM_MILLIS));
+    ui->label_dock_info_period_telem->setText("tcmd : " + QString::number(t.dt[3]) + " / " + QString::number(THREAD_PERIOD_TCMD_MILLIS));
+    ui->label_dock_info_period_telem_2->setText("range : " + QString::number(t.dt[4]) + " / " + QString::number(THREAD_PERIOD_RANGE_MILLIS));
+
+
+    for (int i = 0; i < 6; i++)
+    {
+        QPixmap pix(":/assets/em_off.png");
+        state_labels[i]->setPixmap(pix);
+    }
+
+    QPixmap pix_on(":/assets/em_on.png");
+
+    switch (t.state)
+    {
+    case DOCK_STATE_START:
+        break;
+    case DOCK_STATE_IDLE:
+        ui->label_status_idle->setPixmap(pix_on);
+        break;
+    case DOCK_STATE_CAPTURE:
+        ui->label_status_capture->setPixmap(pix_on);
+        break;
+    case DOCK_STATE_CONTROL:
+        ui->label_status_control->setPixmap(pix_on);
+        break;
+    case DOCK_STATE_LATCH:
+        ui->label_status_latch->setPixmap(pix_on);
+        break;
+    case DOCK_STATE_UNLATCH:
+        ui->label_status_unlatch->setPixmap(pix_on);
+        break;
+    case DOCK_STATE_ABORT:
+        ui->label_status_abort->setPixmap(pix_on);
+        break;
     }
 }
 
@@ -430,7 +503,7 @@ void MainWindow::processMessageQueue()
     }
 }
 
-void MainWindow::sendMessage(tcmd_idx_t idx, double data)
+void MainWindow::sendMessage(enum tcmd_idx idx, double data)
 {
     QString message = QString("$%1:%2#").arg(idx).arg(data, 0, 'f', 3);
     qDebug() << message;
@@ -827,18 +900,17 @@ void MainWindow::on_pushButton_dock_clicked()
 
     if (checked)
     {
-        ui->pushButton_dock->setIcon(QIcon(":/assets/docking.png"));
-        sendMessage(TCMD_START_DOCK, 1.0);
+        ui->pushButton_start_dock->setIcon(QIcon(":/assets/docking.png"));
+        sendMessage(TCMD_DOCK_STATE_START, 1.0);
     }
     else
     {
-        ui->pushButton_dock->setIcon(QIcon(":/assets/dock.png"));
-        sendMessage(TCMD_START_DOCK, 0.0);
+        ui->pushButton_start_dock->setIcon(QIcon(":/assets/dock.png"));
+        sendMessage(TCMD_DOCK_STATE_IDLE, 0.0);
     }
 
     checked = !checked;
 }
-
 
 void MainWindow::on_pushButton_dock_state_idle_clicked()
 {
@@ -872,3 +944,68 @@ void MainWindow::on_pushButton_state_abort_clicked()
 {
     sendMessage(TCMD_DOCK_STATE_ABORT, 0.0);
 }
+
+void MainWindow::on_pushButton_send_latch_current_clicked()
+{
+    sendMessage(TCMD_DOCK_LATCH_CURRENT, ui->textEdit_latch_current->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_disp_sp_clicked()
+{
+    sendMessage(TCMD_DOCK_DISTANCE_SP, ui->textEdit_dock_dist_sp->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_vel_sp_clicked()
+{
+    sendMessage(TCMD_DOCK_VELOCITY_SP, ui->textEdit_dock_vel_sp->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_unlatch_current_clicked()
+{
+    sendMessage(TCMD_DOCK_UNLATCH_CURRENT, ui->textEdit_unlatch_current->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_dock_kp_clicked()
+{
+    sendMessage(TCMD_DOCK_KP, ui->textEdit_dock_kp->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_dock_ki_clicked()
+{
+    sendMessage(TCMD_DOCK_KI, ui->textEdit_dock_ki->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_dock_kd_clicked()
+{
+    sendMessage(TCMD_DOCK_KD, ui->textEdit_dock_kd->toPlainText().toDouble());
+}
+
+
+void MainWindow::on_pushButton_send_dock_kf_clicked()
+{
+    sendMessage(TCMD_DOCK_KF, ui->textEdit_dock_kf->toPlainText().toDouble());
+}
+
+void MainWindow::on_pushButton_goto_kf_dist_plot_clicked()
+{
+    ui->tabWidget->setCurrentWidget(ui->tab_kf_pos);
+}
+
+
+void MainWindow::on_pushButton_goto_kf_vel_plot_clicked()
+{
+    ui->tabWidget->setCurrentWidget(ui->tab_kf_vel);
+}
+
+
+void MainWindow::on_pushButton_goto_current_plot_clicked()
+{
+    ui->tabWidget->setCurrentWidget(ui->tab_coils);
+}
+
