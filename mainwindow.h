@@ -171,6 +171,8 @@ private slots:
 
     void on_pushButton_goto_current_plot_clicked();
 
+    void on_pushButton_send_dist_sp_1_clicked();
+
 private:
     void populate_telemetry(const telemetry_t &t);
 

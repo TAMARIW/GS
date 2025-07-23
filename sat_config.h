@@ -6,7 +6,7 @@
 
 // Docking parameters
 #define DOCK_LATCH_CURRENT_mA 1000
-#define DOCK_UNLATCH_CURRENT_mA -1000
+#define DOCK_UNLATCH_CURRENT_mA -2000
 #define DOCK_CAPTURE_CURRENT_mA 2000
 #define DOCK_CONTROL_VELOCITY_SP 0.0
 #define DOCK_CONTROL_DISTANCE_SP_MM 20
@@ -17,9 +17,9 @@
 #define COIL_PARAM_A 0.1               // Cross section area of coil [m^2]
 
 // Docking controller gains
-#define DOCK_CONTROLLER_GAIN_KP 0.0001
-#define DOCK_CONTROLLER_GAIN_KI 0.0
-#define DOCK_CONTROLLER_GAIN_KD 0.0
+#define DOCK_CONTROLLER_GAIN_KP 0.001
+#define DOCK_CONTROLLER_GAIN_KI 0.5
+#define DOCK_CONTROLLER_GAIN_KD 0.01
 #define DOCK_CONTROLLER_GAIN_KF 1.0
 
 // Battery charge and voltage monitor

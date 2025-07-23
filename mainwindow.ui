@@ -36,7 +36,7 @@
      </size>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_connection">
      <attribute name="title">
@@ -1421,7 +1421,7 @@ QPushButton:hover {
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_send_dist_sp">
+             <widget class="QPushButton" name="pushButton_send_dist_sp_1">
               <property name="minimumSize">
                <size>
                 <width>50</width>

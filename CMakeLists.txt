@@ -11,6 +11,9 @@ qt_add_executable(dock-gs
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    
+    
+    
     resources.qrc
     qcustomplot.cpp qcustomplot.h
     sat_config.h

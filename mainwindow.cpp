@@ -956,10 +956,6 @@ void MainWindow::on_pushButton_send_latch_current_clicked()
 }
 
 
-void MainWindow::on_pushButton_send_disp_sp_clicked()
-{
-    sendMessage(TCMD_DOCK_DISTANCE_SP, ui->textEdit_dock_dist_sp->toPlainText().toDouble());
-}
 
 
 void MainWindow::on_pushButton_send_vel_sp_clicked()
@@ -1012,5 +1008,11 @@ void MainWindow::on_pushButton_goto_kf_vel_plot_clicked()
 void MainWindow::on_pushButton_goto_current_plot_clicked()
 {
     ui->tabWidget->setCurrentWidget(ui->tab_coils);
+}
+
+
+void MainWindow::on_pushButton_send_dist_sp_1_clicked()
+{
+    sendMessage(TCMD_DOCK_DISTANCE_SP, ui->textEdit_dock_dist_sp->toPlainText().toDouble());
 }
 
